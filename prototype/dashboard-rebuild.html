@@ -1,5 +1,5 @@
-<!-- PROTOTYPE: throwaway design exploration for issue #140. Question: what should the rebuilt dashboard look and feel like? Three variants switchable via ?variant=a|b|c.
-     Update, pass 4: renders real eval data trimmed from results.json (17 models, per-subset metrics; sweep arrays, acceptance_at_pos, baselines, and speedup dropped). Two variants, a|b, for one open question: how to visualize the two benchmark sources. Speculator Benchmarks is real: the 9-subset sweep in results.json, whose subsets are the speculator_benchmarks tasks. SPEED-Bench has no results yet and exercises the empty state. Version provenance (vLLM and speculators versions) is not recorded in results.json; it arrives with the new eval-folder contract, so version badges render only when those fields exist. -->
+<!-- PROTOTYPE: throwaway design exploration for issue #140. Question: what should the rebuilt dashboard look and feel like?
+     Update, pass 5 (converged): the original site with surgical changes. No stats band, no target tabs or algorithm filter (search only), failed models hidden, no Analysis section, no benchmark-suite comparison, no variant switcher. The Benchmarks table expands on row click to an inline per-subset bar chart with a local Acceptance/Throughput/Latency selector, plus a SPEED-Bench subsection that renders only when speed-bench results exist for that model (none in current data). Data is real, trimmed from results.json (14 ok models with per-subset metrics; sweep arrays, acceptance_at_pos, baselines, and speedup dropped). Version provenance (vLLM and speculators versions) is not recorded in results.json; it arrives with the new eval-folder contract, so version badges render only when those fields exist. -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -387,38 +387,6 @@ button { font-family: var(--sans); }
   94%, 100% { opacity: 0; transform: translateX(-212px); }
 }
 
-.stats-section { padding: 5.5rem 0 4.5rem; }
-.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); }
-.stat { padding: 0 3rem; }
-.stat:first-child { padding-left: 0; }
-.stat + .stat { border-left: 1px solid var(--border); }
-.stat-val {
-  font-family: var(--mono);
-  font-size: 3.5rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  color: var(--text-1);
-  font-variant-numeric: tabular-nums;
-}
-.stat-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-2);
-  margin-top: 0.875rem;
-}
-.stat-sublabel {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  color: var(--text-3);
-  margin-top: 0.375rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .section-head { margin-bottom: 2.5rem; }
 .section-eyebrow {
   font-family: var(--mono);
@@ -544,6 +512,13 @@ tbody tr:last-child td { border-bottom: none; }
 .model-target { font-size: 0.75rem; color: var(--text-3); }
 .placeholder { text-align: center; color: var(--text-3); padding: 4rem 2rem; font-size: 0.9375rem; }
 
+tbody tr.model-row.expanded { background: var(--row-active); }
+tr.detail-row > td { padding: 0; }
+tr.detail-row > td:hover { background: transparent; }
+.detail-inner { padding: 1.25rem 1.5rem 1.5rem; background: var(--inset-bg); }
+.expand-sb { margin-top: 1.5rem; }
+.expand-sb .section-eyebrow { margin-bottom: 0.75rem; }
+
 .algo-badge {
   display: inline-block;
   padding: 0.125rem 0.5rem;
@@ -560,20 +535,6 @@ tbody tr:last-child td { border-bottom: none; }
 .algo-other  { background: rgba(148,163,184,0.15); color: var(--text-2); }
 .algo-dspark { background: rgba(234,179,8,0.15); color: #facc15; }
 html[data-theme="light"] .algo-dspark { color: #a16207; }
-
-tbody tr.failed-row { opacity: 0.45; }
-.status-badge {
-  display: inline-block;
-  padding: 0.125rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  background: rgba(239,68,68,0.14);
-  color: #f87171;
-}
-html[data-theme="light"] .status-badge { color: #dc2626; }
 
 .hw-chip {
   display: inline-block;
@@ -594,13 +555,6 @@ html[data-theme="light"] .status-badge { color: #dc2626; }
 }
 .metric-unit { font-size: 0.6875rem; color: var(--text-3); margin-left: 3px; }
 
-.chart-section { padding: 2rem 0 5rem; }
-.chart-shell {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-shell);
-  background: var(--surface);
-  padding: 1.75rem 1.5rem 1.25rem;
-}
 .metric-tabs { margin-bottom: 0; }
 
 .gchart-groups {
@@ -642,26 +596,6 @@ html[data-theme="light"] .status-badge { color: #dc2626; }
   color: var(--text-2);
   white-space: nowrap;
 }
-.gchart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-soft);
-}
-.leg-item {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-family: var(--mono);
-  font-size: 0.6875rem;
-  color: var(--text-2);
-}
-.leg-swatch { width: 0.625rem; height: 0.625rem; border-radius: 2px; }
-.gchart-groups.dense { gap: 1.5rem; }
-.gchart-groups.dense .ggroup { min-width: 12rem; }
-.gchart-groups.dense .gbar-wrap { width: 0.9rem; gap: 0; }
 
 .site-footer {
   max-width: var(--max-w);
@@ -686,52 +620,12 @@ html[data-theme="light"] .status-badge { color: #dc2626; }
   border-radius: 4px;
 }
 
-.switcher {
-  position: fixed;
-  left: 50%;
-  bottom: 1.25rem;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: #0b0f19;
-  border: 1px solid rgba(255,255,255,0.18);
-  color: #f8fafc;
-  border-radius: 999px;
-  padding: 0.375rem 0.5rem;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
-  z-index: 100;
-  font-family: var(--mono);
-}
-.switcher button {
-  width: 1.75rem; height: 1.75rem;
-  border-radius: 999px;
-  border: 0;
-  background: none;
-  font-size: 0.8125rem;
-  color: #cbd5e1;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-.switcher button:hover { background: rgba(255,255,255,0.12); color: #ffffff; }
-.switcher-label { font-size: 0.75rem; min-width: 10rem; text-align: center; letter-spacing: 0.04em; }
-
 @media (max-width: 900px) {
   .hero { min-height: auto; padding: 8rem 1.5rem 5.5rem; }
   .site-nav { padding: 1.25rem 1.5rem; }
   .nav-links { gap: 1.25rem; }
   .container { padding: 0 1.25rem; }
   .how-shell { padding: 2rem 1.25rem 1.5rem; }
-  .stats-section { padding: 4rem 0 3.5rem; }
-  .stat { padding: 0 1.5rem; }
-  .stat-val { font-size: 2.75rem; }
-}
-@media (max-width: 760px) {
-  .stats-row { grid-template-columns: 1fr; }
-  .stat { padding: 1.5rem 0; }
-  .stat:first-child { padding-top: 0; }
-  .stat + .stat { border-left: none; border-top: 1px solid var(--border); }
 }
 @media (max-width: 640px) {
   .hero-title { letter-spacing: -0.025em; }
@@ -754,12 +648,6 @@ html[data-theme="light"] .status-badge { color: #dc2626; }
 </head>
 <body>
   <div id="app"></div>
-
-  <nav class="switcher" aria-label="Prototype variant switcher">
-    <button type="button" id="sw-prev" aria-label="Previous variant">&lt;</button>
-    <span id="sw-label" class="switcher-label">A - Source Tabs</span>
-    <button type="button" id="sw-next" aria-label="Next variant">&gt;</button>
-  </nav>
 
   <script>
 const UPDATED_AT = "2026-09-10T13:58:41Z";
@@ -1405,15 +1293,6 @@ const DATA = [
     }
   },
   {
-    "model": "RedHatAI/Qwen3-8B-speculator.peagle",
-    "target": "qwen/qwen3-8b",
-    "algorithm": "peagle",
-    "gpus": "1xa100",
-    "evaluated_at": "2026-08-26T13:24:03Z",
-    "status": "failed",
-    "error": "vLLM 0.26.1rc1 SpeculativeConfig rejects method 'peagle' (unsupported in this build; valid: eagle/eagle3/dflash/dspark/mtp)"
-  },
-  {
     "model": "RedHatAI/Qwen3.6-35B-A3B-speculator.dspark",
     "target": "Qwen/Qwen3.6-35B-A3B",
     "algorithm": "dspark",
@@ -1485,15 +1364,6 @@ const DATA = [
     }
   },
   {
-    "model": "RedHatAI/gemma-4-26B-A4B-it-speculator.eagle3",
-    "target": "google/gemma-4-26B-A4B-it",
-    "algorithm": "eagle3",
-    "gpus": "1xh100",
-    "evaluated_at": "2026-08-26T15:00:26Z",
-    "status": "failed",
-    "error": "vLLM cannot load gemma-4 (heterogeneous per-layer config). get_head_size in vllm/transformers_utils/model_arch_config_convertor.py:608 calls"
-  },
-  {
     "model": "RedHatAI/gemma-4-31B-it-speculator.dflash",
     "target": "google/gemma-4-31B-it",
     "algorithm": "dflash",
@@ -1563,15 +1433,6 @@ const DATA = [
         "ttft_ms": 117.41
       }
     }
-  },
-  {
-    "model": "RedHatAI/gemma-4-31B-it-speculator.dspark",
-    "target": "google/gemma-4-31B-it",
-    "algorithm": "dspark",
-    "gpus": "1xh100",
-    "evaluated_at": "2026-08-26T15:00:26Z",
-    "status": "failed",
-    "error": "vLLM cannot load gemma-4 (heterogeneous per-layer config). get_head_size in vllm/transformers_utils/model_arch_config_convertor.py:608 calls"
   },
   {
     "model": "RedHatAI/gemma-4-31B-it-speculator.eagle3",
@@ -1796,28 +1657,11 @@ const METRICS = {
 
 const ALGO_COLORS = { eagle3: 'var(--eagle3)', dflash: 'var(--dflash)', peagle: 'var(--peagle)', mtp: 'var(--mtp)', dspark: 'var(--dspark)' };
 
-const SOURCES = {
-  specBench: {
-    label: 'Speculator Benchmarks',
-    desc: 'Per-subset results from the speculator_benchmarks eval sweep: one bar per drafter, colored by algorithm. Task splits come from the <a href="https://huggingface.co/datasets/RedHatAI/speculator_benchmarks" target="_blank" rel="noopener">RedHatAI/speculator_benchmarks</a> dataset.',
-    empty: null
-  },
-  speedBench: {
-    label: 'SPEED-Bench',
-    desc: 'Scores from the SPEED-Bench suite appear here once the eval harness reports them.',
-    empty: 'No SPEED-Bench results yet. The eval harness has not reported scores for this suite.'
-  }
-};
-
-const VARIANTS = ['a', 'b'];
-const VARIANT_LABELS = { a: 'A - Source Tabs', b: 'B - Two Sections' };
-
 const state = {
-  variant: readVariant(),
   theme: 'dark',
-  metric: 'throughput',
-  source: 'specBench',
-  filters: { target: 'all', algorithm: 'all', text: '' },
+  metric: 'acceptance',
+  expanded: null,
+  filters: { text: '' },
   sort: { key: 'throughput', dir: -1 }
 };
 
@@ -1843,11 +1687,6 @@ const LOGO_SVG = `<svg viewBox="0 0 78 91" fill="none" xmlns="http://www.w3.org/
     <linearGradient id="aur_g2" x1="27.5" y1="22.3541" x2="25" y2="29.8541" gradientUnits="userSpaceOnUse"><stop offset="0.25" stop-color="#30A2FF"/><stop offset="1" stop-color="white"/></linearGradient>
   </defs>
 </svg>`;
-
-function readVariant() {
-  const v = new URLSearchParams(location.search).get('variant');
-  return VARIANTS.indexOf(v) >= 0 ? v : 'a';
-}
 
 function short(name) {
   const idx = name.indexOf('/');
@@ -1950,18 +1789,6 @@ function howHTML() {
     '</div></div></section>';
 }
 
-function statsHTML() {
-  const ok = DATA.filter(function (d) { return d.status === 'ok'; }).length;
-  const failed = DATA.length - ok;
-  const algos = {};
-  DATA.forEach(function (d) { algos[d.algorithm] = true; });
-  return '<section class="stats-section fade-in-up"><div class="container"><div class="stats-row">' +
-    '<div class="stat"><div class="stat-val">' + ok + '</div><div class="stat-label">Models Evaluated</div><div class="stat-sublabel">' + DATA.length + ' tracked · ' + failed + ' failed</div></div>' +
-    '<div class="stat"><div class="stat-val">' + DATA.length + '</div><div class="stat-label">Eval Runs</div></div>' +
-    '<div class="stat"><div class="stat-val">' + Object.keys(algos).length + '</div><div class="stat-label">Algorithms Compared</div></div>' +
-    '</div></div></section>';
-}
-
 function footerHTML() {
   return '<footer class="site-footer">' +
     '<span>Data source: <code>results.json</code> &middot; &copy; 2025 Red Hat AI</span>' +
@@ -1981,8 +1808,6 @@ const SORTS = {
 function filteredData() {
   const q = state.filters.text.trim().toLowerCase();
   const out = DATA.filter(function (d) {
-    if (state.filters.target !== 'all' && short(d.target) !== state.filters.target) return false;
-    if (state.filters.algorithm !== 'all' && d.algorithm !== state.filters.algorithm) return false;
     if (q) {
       const hay = (d.model + ' ' + d.target + ' ' + d.algorithm).toLowerCase();
       if (hay.indexOf(q) < 0) return false;
@@ -1998,32 +1823,6 @@ function filteredData() {
     return (x < y ? -1 : x > y ? 1 : 0) * state.sort.dir;
   });
   return out;
-}
-
-function targetTabsHTML() {
-  const counts = {};
-  DATA.forEach(function (d) {
-    const fam = short(d.target);
-    counts[fam] = (counts[fam] || 0) + 1;
-  });
-  const fams = Object.keys(counts).sort();
-  let html = '<button type="button" class="target-tab' + (state.filters.target === 'all' ? ' active' : '') + '" data-target="all">All Targets <span class="tab-count">' + DATA.length + '</span></button>';
-  fams.forEach(function (fam) {
-    html += '<button type="button" class="target-tab' + (state.filters.target === fam ? ' active' : '') + '" data-target="' + fam + '">' + fam + ' <span class="tab-count">' + counts[fam] + '</span></button>';
-  });
-  return '<div class="target-tabs">' + html + '</div>';
-}
-
-function algoSelectHTML() {
-  const algos = [];
-  DATA.forEach(function (d) { if (algos.indexOf(d.algorithm) < 0) algos.push(d.algorithm); });
-  algos.sort();
-  let html = '<select class="filter-select" id="filter-algorithm" aria-label="Filter by algorithm">' +
-    '<option value="all">All Algorithms</option>';
-  algos.forEach(function (a) {
-    html += '<option value="' + a + '"' + (state.filters.algorithm === a ? ' selected' : '') + '>' + a + '</option>';
-  });
-  return html + '</select>';
 }
 
 function tableHTML() {
@@ -2042,184 +1841,84 @@ function tableHTML() {
       '<div class="placeholder">No models match the current filters.</div></div>';
   }
   const body = rows.map(function (d) {
-    const failed = d.status !== 'ok';
-    const badge = failed
-      ? '<span class="status-badge"' + (d.error ? ' title="' + d.error + '"' : '') + '>failed</span>'
-      : '<span class="algo-badge ' + algoClass(d.algorithm) + '">' + d.algorithm + '</span>';
-    let cells;
-    if (failed) {
-      cells = '<td class="right"><span class="metric-unit">n/a</span></td>'.repeat(4);
-    } else {
-      cells = '<td class="right"><span class="metric-val">' + d.metrics.acceptance_length.toFixed(2) + '</span></td>' +
-        '<td class="right"><span class="metric-val">' + METRICS.throughput.fmt(d.metrics.throughput_tps) + '</span><span class="metric-unit">tok/s</span></td>' +
-        '<td class="right"><span class="metric-val">' + d.metrics.ttft_ms.toFixed(1) + '</span><span class="metric-unit">ms</span></td>' +
-        '<td class="right"><span class="metric-val">' + d.metrics.itl_ms.toFixed(2) + '</span><span class="metric-unit">ms/tok</span></td>';
-    }
-    return '<tr class="model-row' + (failed ? ' failed-row' : '') + '">' +
+    let html = '<tr class="model-row' + (state.expanded === d.model ? ' expanded' : '') + '" data-expand="' + d.model + '">' +
       '<td><div class="model-name"><span class="top-row">' +
-      '<a class="d-name" href="https://huggingface.co/' + d.model + '" target="_blank" rel="noopener noreferrer">' + short(d.model) + '</a>' + badge + '</span>' +
+      '<a class="d-name" href="https://huggingface.co/' + d.model + '" target="_blank" rel="noopener noreferrer">' + short(d.model) + '</a>' +
+      '<span class="algo-badge ' + algoClass(d.algorithm) + '">' + d.algorithm + '</span></span>' +
       '<span class="model-target">' + short(d.target) + '</span></div></td>' +
-      cells +
+      '<td class="right"><span class="metric-val">' + d.metrics.acceptance_length.toFixed(2) + '</span></td>' +
+      '<td class="right"><span class="metric-val">' + METRICS.throughput.fmt(d.metrics.throughput_tps) + '</span><span class="metric-unit">tok/s</span></td>' +
+      '<td class="right"><span class="metric-val">' + d.metrics.ttft_ms.toFixed(1) + '</span><span class="metric-unit">ms</span></td>' +
+      '<td class="right"><span class="metric-val">' + d.metrics.itl_ms.toFixed(2) + '</span><span class="metric-unit">ms/tok</span></td>' +
       '<td><span class="hw-chip">' + formatHardware(d.gpus) + '</span> <span class="hw-chip">' + d.evaluated_at.slice(0, 10) + '</span>' + versionChips(d) + '</td></tr>';
+    if (state.expanded === d.model) html += expandHTML(d);
+    return html;
   }).join('');
   return '<div class="table-shell"><div class="table-scroll"><table>' +
     '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div></div>';
+}
+
+function expandHTML(d) {
+  const m = METRICS[state.metric];
+  const subsets = Object.keys(d.subsets);
+  let max = 0;
+  subsets.forEach(function (s) {
+    const v = d.subsets[s][m.field];
+    if (v !== null && v !== undefined && v > max) max = v;
+  });
+  const tabs = '<div class="target-tabs metric-tabs">' + Object.keys(METRICS).map(function (k) {
+    return '<button type="button" class="target-tab' + (state.metric === k ? ' active' : '') + '" data-metric="' + k + '">' + METRICS[k].label + '</button>';
+  }).join('') + '</div>';
+  const bars = subsets.map(function (s) {
+    const v = d.subsets[s][m.field];
+    const missing = v === null || v === undefined;
+    const h = missing ? 0 : Math.max(3, Math.round((v / max) * 100));
+    return '<div class="ggroup"><div class="ggroup-bars"><div class="gbar-wrap">' +
+      '<span class="gbar-val">' + (missing ? 'n/a' : m.fmt(v)) + '</span>' +
+      '<div class="gbar" style="height:' + h + '%;background:' + algoColor(d.algorithm) + '" title="' + s + ': ' + (missing ? 'n/a' : m.fmt(v) + ' ' + m.unit) + '"></div></div></div>' +
+      '<div class="ggroup-label">' + s + '</div></div>';
+  }).join('');
+  let sb = '';
+  if (d.speedBench && d.speedBench.length) {
+    const sbRows = d.speedBench.map(function (s) {
+      return '<tr><td>' + s.subset + '</td><td class="right"><span class="metric-val">' + s.score.toFixed(1) + '</span></td></tr>';
+    }).join('');
+    sb = '<div class="expand-sb"><div class="section-eyebrow">SPEED-Bench</div>' +
+      '<div class="table-shell"><table><thead><tr><th>Subset</th><th class="right">Score</th></tr></thead>' +
+      '<tbody>' + sbRows + '</tbody></table></div></div>';
+  }
+  return '<tr class="detail-row"><td colspan="6"><div class="detail-inner">' +
+    tabs + '<div class="gchart-groups">' + bars + '</div>' + sb +
+    '</div></td></tr>';
 }
 
 function benchmarksHTML() {
   return '<section class="benchmark-section fade-in-up"><div class="container">' +
     '<div class="section-head">' +
     '<div class="section-eyebrow">Benchmarks</div>' +
-    '<h2 class="section-title">The results.</h2></div>' +
-    '<div id="tabs-wrap">' + targetTabsHTML() + '</div>' +
-    '<div class="filters">' + algoSelectHTML() +
+    '<h2 class="section-title">The results.</h2>' +
+    '<p class="section-desc">Click a drafter row for per-subset results.</p></div>' +
+    '<div class="filters">' +
     '<input type="search" class="filter-input" id="filter-text" placeholder="Search models..." aria-label="Search models" value="' + state.filters.text + '">' +
     '</div>' +
     '<div id="table-wrap">' + tableHTML() + '</div>' +
     '</div></section>';
 }
 
-function legendHTML(algos) {
-  return '<div class="gchart-legend">' + algos.map(function (a) {
-    return '<span class="leg-item"><span class="leg-swatch" style="background:' + algoColor(a) + '"></span>' + a + '</span>';
-  }).join('') + '</div>';
-}
-
-function analysisChartHTML() {
-  const m = METRICS[state.metric];
-  const ok = DATA.filter(function (d) { return d.status === 'ok' && d.metrics; });
-  const byTarget = {};
-  const targets = [];
-  const algosPresent = [];
-  ok.forEach(function (d) {
-    const fam = short(d.target);
-    if (!byTarget[fam]) { byTarget[fam] = {}; targets.push(fam); }
-    const v = d.metrics[m.field];
-    if (v === null || v === undefined) return;
-    const cur = byTarget[fam][d.algorithm];
-    if (!cur || (m.better === 'min' ? v < cur.v : v > cur.v)) {
-      byTarget[fam][d.algorithm] = { v: v, d: d };
-    }
-    if (algosPresent.indexOf(d.algorithm) < 0) algosPresent.push(d.algorithm);
-  });
-  targets.sort();
-  let max = 0;
-  targets.forEach(function (t) {
-    Object.keys(byTarget[t]).forEach(function (a) { if (byTarget[t][a].v > max) max = byTarget[t][a].v; });
-  });
-  const groups = targets.map(function (t) {
-    const bars = algosPresent.filter(function (a) { return byTarget[t][a]; }).map(function (a) {
-      const cell = byTarget[t][a];
-      const h = Math.max(3, Math.round((cell.v / max) * 100));
-      return '<div class="gbar-wrap"><span class="gbar-val">' + m.fmt(cell.v) + '</span>' +
-        '<div class="gbar" style="height:' + h + '%;background:' + algoColor(a) + '" title="' + short(cell.d.model) + ': ' + m.fmt(cell.v) + ' ' + m.unit + '"></div></div>';
-    }).join('');
-    return '<div class="ggroup"><div class="ggroup-bars">' + bars + '</div><div class="ggroup-label">' + t + '</div></div>';
-  }).join('');
-  return '<div class="gchart-groups">' + groups + '</div>' + legendHTML(algosPresent);
-}
-
-function analysisHTML() {
-  const m = METRICS[state.metric];
-  const tabs = Object.keys(METRICS).map(function (k) {
-    return '<button type="button" class="target-tab' + (state.metric === k ? ' active' : '') + '" data-metric="' + k + '">' + METRICS[k].label + '</button>';
-  }).join('');
-  return '<section class="chart-section fade-in-up"><div class="container">' +
-    '<div class="section-head">' +
-    '<div class="section-eyebrow">Analysis</div>' +
-    '<h2 class="section-title">Algorithm Comparison</h2>' +
-    '<p class="section-desc">Best ' + m.label.toLowerCase() + ' (' + m.unit + ') per algorithm on each target model</p></div>' +
-    '<div class="target-tabs metric-tabs">' + tabs + '</div>' +
-    '<div class="chart-shell">' + analysisChartHTML() + '</div>' +
-    '</div></section>';
-}
-
-function sourceChartHTML(sourceKey) {
-  const src = SOURCES[sourceKey];
-  if (src.empty) return '<div class="placeholder">' + src.empty + '</div>';
-  const m = METRICS[state.metric];
-  const ok = DATA.filter(function (d) { return d.status === 'ok' && d.subsets; });
-  const subsets = ok.length ? Object.keys(ok[0].subsets) : [];
-  let max = 0;
-  ok.forEach(function (d) {
-    subsets.forEach(function (s) {
-      const v = d.subsets[s][m.field];
-      if (v !== null && v !== undefined && v > max) max = v;
-    });
-  });
-  const algosPresent = [];
-  const groups = subsets.map(function (subset) {
-    const bars = ok.filter(function (d) {
-      return d.subsets[subset][m.field] !== null && d.subsets[subset][m.field] !== undefined;
-    }).map(function (d) {
-      if (algosPresent.indexOf(d.algorithm) < 0) algosPresent.push(d.algorithm);
-      const v = d.subsets[subset][m.field];
-      const h = Math.max(2, Math.round((v / max) * 100));
-      return '<div class="gbar-wrap">' +
-        '<div class="gbar" style="height:' + h + '%;background:' + algoColor(d.algorithm) + '" title="' + short(d.model) + ' · ' + subset + ': ' + m.fmt(v) + ' ' + m.unit + '"></div></div>';
-    }).join('');
-    return '<div class="ggroup"><div class="ggroup-bars">' + bars + '</div><div class="ggroup-label">' + subset + '</div></div>';
-  }).join('');
-  return '<div class="gchart-groups dense">' + groups + '</div>' + legendHTML(algosPresent);
-}
-
-function metricTabsHTML() {
-  return '<div class="target-tabs metric-tabs">' + Object.keys(METRICS).map(function (k) {
-    return '<button type="button" class="target-tab' + (state.metric === k ? ' active' : '') + '" data-metric="' + k + '">' + METRICS[k].label + '</button>';
-  }).join('') + '</div>';
-}
-
-function suitesHTML() {
-  if (state.variant === 'a') {
-    const tabs = Object.keys(SOURCES).map(function (k) {
-      return '<button type="button" class="target-tab' + (state.source === k ? ' active' : '') + '" data-source="' + k + '">' + SOURCES[k].label + '</button>';
-    }).join('');
-    return '<section class="chart-section fade-in-up"><div class="container">' +
-      '<div class="section-head">' +
-      '<div class="section-eyebrow">Benchmark Suites</div>' +
-      '<h2 class="section-title">Suite Comparison</h2>' +
-      '<p class="section-desc">' + SOURCES[state.source].desc + '</p></div>' +
-      '<div class="target-tabs metric-tabs">' + tabs + '</div>' +
-      (SOURCES[state.source].empty ? '' : metricTabsHTML()) +
-      '<div class="chart-shell">' + sourceChartHTML(state.source) + '</div>' +
-      '</div></section>';
-  }
-  return Object.keys(SOURCES).map(function (k) {
-    return '<section class="chart-section fade-in-up"><div class="container">' +
-      '<div class="section-head">' +
-      '<div class="section-eyebrow">Benchmark Suites</div>' +
-      '<h2 class="section-title">' + SOURCES[k].label + '</h2>' +
-      '<p class="section-desc">' + SOURCES[k].desc + '</p></div>' +
-      (SOURCES[k].empty ? '' : metricTabsHTML()) +
-      '<div class="chart-shell">' + sourceChartHTML(k) + '</div>' +
-      '</div></section>';
-  }).join('');
-}
-
 function pageHTML() {
   return heroHTML() +
     '<main>' +
     howHTML() +
-    statsHTML() +
     benchmarksHTML() +
-    analysisHTML() +
-    suitesHTML() +
     '</main>' + footerHTML();
 }
 
 function refreshTable() {
-  document.getElementById('tabs-wrap').innerHTML = targetTabsHTML();
   document.getElementById('table-wrap').innerHTML = tableHTML();
   bindTableControls();
 }
 
 function bindTableControls() {
-  document.querySelectorAll('#tabs-wrap [data-target]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      state.filters.target = b.dataset.target;
-      refreshTable();
-    });
-  });
   document.querySelectorAll('#table-wrap [data-sort]').forEach(function (th) {
     th.addEventListener('click', function () {
       const key = th.dataset.sort;
@@ -2227,6 +1926,22 @@ function bindTableControls() {
       else { state.sort.key = key; state.sort.dir = key === 'model' || key === 'hardware' ? 1 : -1; }
       refreshTable();
     });
+  });
+  document.querySelectorAll('#table-wrap [data-expand]').forEach(function (tr) {
+    tr.addEventListener('click', function () {
+      state.expanded = state.expanded === tr.dataset.expand ? null : tr.dataset.expand;
+      refreshTable();
+    });
+  });
+  document.querySelectorAll('#table-wrap [data-metric]').forEach(function (b) {
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      state.metric = b.dataset.metric;
+      refreshTable();
+    });
+  });
+  document.querySelectorAll('#table-wrap .d-name').forEach(function (a) {
+    a.addEventListener('click', function (e) { e.stopPropagation(); });
   });
 }
 
@@ -2237,25 +1952,6 @@ function bind() {
       render();
     });
   });
-  document.querySelectorAll('[data-metric]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      state.metric = b.dataset.metric;
-      render();
-    });
-  });
-  document.querySelectorAll('[data-source]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      state.source = b.dataset.source;
-      render();
-    });
-  });
-  const algoSel = document.getElementById('filter-algorithm');
-  if (algoSel) {
-    algoSel.addEventListener('change', function () {
-      state.filters.algorithm = algoSel.value;
-      refreshTable();
-    });
-  }
   const textInput = document.getElementById('filter-text');
   if (textInput) {
     textInput.addEventListener('input', function () {
@@ -2278,33 +1974,9 @@ function setupAnimations() {
 function render() {
   document.documentElement.dataset.theme = state.theme;
   document.getElementById('app').innerHTML = pageHTML();
-  document.getElementById('sw-label').textContent = VARIANT_LABELS[state.variant];
   bind();
   setupAnimations();
 }
-
-function setVariant(v) {
-  state.variant = v;
-  history.replaceState(null, '', '?variant=' + v);
-  render();
-  window.scrollTo(0, 0);
-}
-
-function cycle(dir) {
-  const i = VARIANTS.indexOf(state.variant);
-  const next = (i + dir + VARIANTS.length) % VARIANTS.length;
-  setVariant(VARIANTS[next]);
-}
-
-document.getElementById('sw-prev').addEventListener('click', function () { cycle(-1); });
-document.getElementById('sw-next').addEventListener('click', function () { cycle(1); });
-
-document.addEventListener('keydown', function (e) {
-  const t = e.target;
-  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
-  if (e.key === 'ArrowLeft') cycle(-1);
-  else if (e.key === 'ArrowRight') cycle(1);
-});
 
 render();
   </script>
