@@ -1,4 +1,5 @@
-<!-- PROTOTYPE: throwaway design exploration for issue #140. Question: what should the rebuilt dashboard look and feel like? Three variants switchable via ?variant=a|b|c. -->
+<!-- PROTOTYPE: throwaway design exploration for issue #140. Question: what should the rebuilt dashboard look and feel like? Three variants switchable via ?variant=a|b|c.
+     Update, pass 4: renders real eval data trimmed from results.json (17 models, per-subset metrics; sweep arrays, acceptance_at_pos, baselines, and speedup dropped). Two variants, a|b, for one open question: how to visualize the two benchmark sources. Speculator Benchmarks is real: the 9-subset sweep in results.json, whose subsets are the speculator_benchmarks tasks. SPEED-Bench has no results yet and exercises the empty state. Version provenance (vLLM and speculators versions) is not recorded in results.json; it arrives with the new eval-folder contract, so version badges render only when those fields exist. -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -17,6 +18,11 @@
   --yellow-hover: #e5a315;
   --red: #ef4444;
   --green: #22c55e;
+  --eagle3: #3b82f6;
+  --dflash: #f97316;
+  --peagle: #a855f7;
+  --mtp: #10b981;
+  --dspark: #eab308;
 }
 html[data-theme="dark"] {
   color-scheme: dark;
@@ -30,7 +36,6 @@ html[data-theme="dark"] {
   --border-input: rgba(255,255,255,0.15);
   --border-soft: rgba(255,255,255,0.05);
   --row-hover: rgba(255,255,255,0.025);
-  --row-active: rgba(48,162,255,0.045);
   --inset-bg: rgba(2,6,23,0.45);
   --shell-bg: rgba(15,23,42,0.55);
   --eyebrow-bg: rgba(2,6,23,0.4);
@@ -44,7 +49,6 @@ html[data-theme="dark"] {
   --algo-peagle-text: #c084fc;
   --algo-mtp-text: #34d399;
   --dia-node-fill: rgba(15,23,42,0.85);
-  --drop-shadow: 0 16px 40px rgba(2,6,23,0.5);
 }
 html[data-theme="light"] {
   color-scheme: light;
@@ -58,7 +62,6 @@ html[data-theme="light"] {
   --border-input: rgba(15,23,42,0.2);
   --border-soft: rgba(15,23,42,0.07);
   --row-hover: rgba(15,23,42,0.03);
-  --row-active: rgba(2,132,199,0.06);
   --inset-bg: rgba(241,245,249,0.85);
   --shell-bg: rgba(255,255,255,0.8);
   --eyebrow-bg: rgba(255,255,255,0.65);
@@ -72,7 +75,6 @@ html[data-theme="light"] {
   --algo-peagle-text: #9333ea;
   --algo-mtp-text: #059669;
   --dia-node-fill: rgba(255,255,255,0.92);
-  --drop-shadow: 0 16px 40px rgba(15,23,42,0.16);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,15 +112,6 @@ button { font-family: var(--sans); }
   margin: 0 auto;
   padding: 1.5rem 2rem;
 }
-.site-nav.static {
-  position: relative;
-  border-bottom: 1px solid var(--border);
-  max-width: none;
-}
-.site-nav.static .nav-inner {
-  max-width: 80rem; margin: 0 auto; width: 100%;
-  display: flex; align-items: center; justify-content: space-between;
-}
 .nav-brand {
   display: flex;
   align-items: center;
@@ -132,15 +125,13 @@ button { font-family: var(--sans); }
 .nav-brand svg { height: 1.75rem; width: auto; display: block; }
 .nav-brand .nav-sub { font-weight: 400; color: var(--text-2); }
 .nav-links { display: flex; align-items: center; gap: 1.75rem; }
-.nav-links a, .nav-links .nav-link-btn {
+.nav-links a {
   color: var(--text-2);
   font-size: 0.875rem;
   font-weight: 500;
   transition: color 250ms ease;
-  background: none; border: 0; cursor: pointer; padding: 0;
 }
-.nav-links a:hover, .nav-links .nav-link-btn:hover { color: var(--text-1); text-decoration: none; }
-.nav-links .nav-link-btn.active { color: var(--blue); }
+.nav-links a:hover { color: var(--text-1); text-decoration: none; }
 .theme-toggle {
   font-family: var(--mono);
   font-size: 0.6875rem;
@@ -165,8 +156,6 @@ button { font-family: var(--sans); }
   padding: 9rem 2rem 7rem;
   background: var(--bg);
 }
-.hero.compact { min-height: auto; padding: 9rem 2rem 4.5rem; }
-
 .aurora { position: absolute; inset: -10%; pointer-events: none; }
 .aurora-blob { position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform; }
 .aurora-blob--deep {
@@ -202,7 +191,6 @@ button { font-family: var(--sans); }
   background: linear-gradient(to bottom, transparent, var(--bg));
   pointer-events: none;
 }
-
 @keyframes drift-a {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33%      { transform: translate(7%, -6%) scale(1.12); }
@@ -217,7 +205,6 @@ button { font-family: var(--sans); }
   40%      { transform: translate(6%, -9%) scale(1.08); }
   75%      { transform: translate(-6%, -3%) scale(0.94); }
 }
-
 .hero-content {
   position: relative;
   z-index: 1;
@@ -451,10 +438,50 @@ button { font-family: var(--sans); }
 }
 .section-desc { font-size: 1rem; color: var(--text-2); margin-top: 0.875rem; max-width: 40rem; }
 
-.dash-section { padding: 4rem 0 5rem; }
+.benchmark-section { padding: 2rem 0 4rem; }
+.target-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.target-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.125rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text-3);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 250ms ease, border-color 250ms ease;
+}
+.target-tab:hover { color: var(--text-1); }
+.target-tab.active { color: var(--text-1); border-bottom-color: var(--blue); }
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: var(--muted-surface);
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-3);
+}
+.target-tab.active .tab-count { background: rgba(48,162,255,0.15); color: var(--blue); }
 
 .filters { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-.filter-input {
+.filter-select, .filter-input {
   background: var(--surface);
   border: 1px solid var(--border-input);
   border-radius: var(--radius-base);
@@ -464,43 +491,16 @@ button { font-family: var(--sans); }
   padding: 0.625rem 1rem;
   outline: none;
   transition: border-color 250ms ease, box-shadow 250ms ease;
-  width: 100%;
 }
+.filter-select { min-width: 180px; cursor: pointer; }
+.filter-input { flex: 1; min-width: 220px; }
 .filter-input::placeholder { color: var(--text-3); }
-.filter-input:hover { border-color: var(--text-3); }
-.filter-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(48,162,255,0.15); }
-
-.search { position: relative; flex: 1; min-width: 220px; }
-.search-drop {
-  position: absolute;
-  top: calc(100% + 0.375rem);
-  left: 0; right: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-base);
-  box-shadow: var(--drop-shadow);
-  z-index: 40;
-  max-height: 18rem;
-  overflow: auto;
-  padding: 0.25rem;
+.filter-select:hover, .filter-input:hover { border-color: var(--text-3); }
+.filter-select:focus, .filter-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(48,162,255,0.15);
 }
-.search-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.125rem;
-  width: 100%;
-  text-align: left;
-  padding: 0.5rem 0.625rem;
-  border: 0;
-  border-radius: 0.375rem;
-  background: none;
-  cursor: pointer;
-}
-.search-item:hover { background: var(--row-hover); }
-.si-name { font-family: var(--mono); font-size: 0.75rem; color: var(--text-1); }
-.si-meta { font-size: 0.6875rem; color: var(--text-3); }
-.search-empty { padding: 0.625rem; font-size: 0.75rem; color: var(--text-3); }
+.filter-select option { background: var(--surface); color: var(--text-1); }
 
 .table-shell {
   border: 1px solid var(--border);
@@ -519,20 +519,30 @@ thead th {
   letter-spacing: 0.1em;
   color: var(--text-3);
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
   white-space: nowrap;
   user-select: none;
+  transition: color 250ms ease;
 }
+thead th:hover { color: var(--text-1); }
+thead th .sort-arrow { font-size: 0.625rem; margin-left: 0.375rem; color: var(--blue); }
 th.right, td.right { text-align: right; }
 tbody tr { transition: background 250ms ease; }
-tbody tr.model-row { cursor: pointer; }
 tbody tr.model-row:hover { background: var(--row-hover); }
-tbody tr.model-row.expanded { background: var(--row-active); }
 td { padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
 tbody tr:last-child td { border-bottom: none; }
 .model-name { display: flex; flex-direction: column; gap: 0.25rem; }
 .model-name .top-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-.model-name .d-name { font-weight: 600; font-size: 0.9375rem; color: var(--text-1); font-family: var(--mono); }
+.model-name a.d-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--text-1);
+  font-family: var(--mono);
+  transition: color 250ms ease;
+}
+.model-name a.d-name:hover { color: var(--blue); text-decoration: none; }
 .model-target { font-size: 0.75rem; color: var(--text-3); }
+.placeholder { text-align: center; color: var(--text-3); padding: 4rem 2rem; font-size: 0.9375rem; }
 
 .algo-badge {
   display: inline-block;
@@ -548,6 +558,22 @@ tbody tr:last-child td { border-bottom: none; }
 .algo-peagle { background: rgba(168,85,247,0.15);  color: var(--algo-peagle-text); }
 .algo-mtp    { background: rgba(16,185,129,0.15);  color: var(--algo-mtp-text); }
 .algo-other  { background: rgba(148,163,184,0.15); color: var(--text-2); }
+.algo-dspark { background: rgba(234,179,8,0.15); color: #facc15; }
+html[data-theme="light"] .algo-dspark { color: #a16207; }
+
+tbody tr.failed-row { opacity: 0.45; }
+.status-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(239,68,68,0.14);
+  color: #f87171;
+}
+html[data-theme="light"] .status-badge { color: #dc2626; }
 
 .hw-chip {
   display: inline-block;
@@ -568,63 +594,74 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .metric-unit { font-size: 0.6875rem; color: var(--text-3); margin-left: 3px; }
 
-.picked { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; margin: 2rem 0 0.25rem; }
-.picked:first-of-type { margin-top: 0; }
-.picked-name { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.01em; font-family: var(--mono); }
-.picked-target { font-size: 0.8125rem; color: var(--text-3); font-family: var(--mono); }
-
-.detail-tabs { display: flex; gap: 0; margin: 1.25rem 0 1rem; border-bottom: 1px solid var(--border); }
-.detail-tab {
-  padding: 0.5rem 1rem;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  color: var(--text-3);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color 250ms ease, border-color 250ms ease;
-}
-.detail-tab:hover { color: var(--text-1); }
-.detail-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
-
+.chart-section { padding: 2rem 0 5rem; }
 .chart-shell {
   border: 1px solid var(--border);
   border-radius: var(--radius-shell);
   background: var(--surface);
   padding: 1.75rem 1.5rem 1.25rem;
 }
-.bars { display: flex; align-items: flex-end; gap: 1.5rem; }
-.bar-col { flex: 1; max-width: 12rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-width: 0; }
-.bar-val { font-family: var(--mono); font-size: 0.8125rem; color: var(--text-1); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.bar-track { width: 100%; height: 180px; display: flex; align-items: flex-end; }
-.bar-fill { width: 100%; min-height: 3px; background: var(--blue); border-radius: 4px 4px 0 0; }
-.bar-label { font-family: var(--mono); font-size: 0.6875rem; color: var(--text-3); white-space: nowrap; }
+.metric-tabs { margin-bottom: 0; }
 
-.runs { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.5rem; }
-.run-row { display: flex; flex-wrap: wrap; gap: 0.375rem; align-items: center; }
-
-.sb { margin-top: 2.5rem; }
-.sb .section-eyebrow { margin-bottom: 1rem; }
-.subset-tbl { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
-.subset-tbl th {
-  text-align: left;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-3);
-  border-bottom: 1px solid var(--border);
+.gchart-groups {
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  overflow-x: auto;
+  padding: 0.5rem 0.25rem 0;
 }
-.subset-tbl th.num { text-align: right; }
-.subset-tbl td { padding: 0.625rem 1.25rem; border-bottom: 1px solid var(--border-soft); }
-.subset-tbl tr:last-child td { border-bottom: none; }
-.subset-tbl td.num { text-align: right; font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; }
-.subset-tbl .unit { font-size: 0.625rem; color: var(--text-3); margin-left: 2px; }
-.subset-name { font-weight: 500; font-family: var(--mono); font-size: 0.75rem; }
+.ggroup {
+  flex: 1;
+  min-width: 5.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+}
+.ggroup-bars { display: flex; align-items: flex-end; gap: 0.375rem; height: 180px; }
+.gbar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem;
+  height: 100%;
+  width: 1.625rem;
+}
+.gbar-val {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gbar { width: 100%; min-height: 3px; border-radius: 3px 3px 0 0; }
+.ggroup-label {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.gchart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft);
+}
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--text-2);
+}
+.leg-swatch { width: 0.625rem; height: 0.625rem; border-radius: 2px; }
+.gchart-groups.dense { gap: 1.5rem; }
+.gchart-groups.dense .ggroup { min-width: 12rem; }
+.gchart-groups.dense .gbar-wrap { width: 0.9rem; gap: 0; }
 
 .site-footer {
   max-width: var(--max-w);
@@ -648,12 +685,6 @@ tbody tr:last-child td { border-bottom: none; }
   padding: 0.125rem 0.375rem;
   border-radius: 4px;
 }
-
-@keyframes flash {
-  0% { outline: 2px solid var(--blue); outline-offset: 2px; }
-  100% { outline: 2px solid transparent; outline-offset: 2px; }
-}
-.flash { animation: flash 1.2s ease-out; border-radius: 4px; }
 
 .switcher {
   position: fixed;
@@ -684,7 +715,7 @@ tbody tr:last-child td { border-bottom: none; }
   place-items: center;
 }
 .switcher button:hover { background: rgba(255,255,255,0.12); color: #ffffff; }
-.switcher-label { font-size: 0.75rem; min-width: 9.5rem; text-align: center; letter-spacing: 0.04em; }
+.switcher-label { font-size: 0.75rem; min-width: 10rem; text-align: center; letter-spacing: 0.04em; }
 
 @media (max-width: 900px) {
   .hero { min-height: auto; padding: 8rem 1.5rem 5.5rem; }
@@ -705,7 +736,7 @@ tbody tr:last-child td { border-bottom: none; }
 @media (max-width: 640px) {
   .hero-title { letter-spacing: -0.025em; }
   .hero-subtitle { font-size: 1.0625rem; }
-  .nav-links a.ext-link { display: none; }
+  .nav-links a:not(:last-child) { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -726,133 +757,1068 @@ tbody tr:last-child td { border-bottom: none; }
 
   <nav class="switcher" aria-label="Prototype variant switcher">
     <button type="button" id="sw-prev" aria-label="Previous variant">&lt;</button>
-    <span id="sw-label" class="switcher-label">A - Integrated</span>
+    <span id="sw-label" class="switcher-label">A - Source Tabs</span>
     <button type="button" id="sw-next" aria-label="Next variant">&gt;</button>
   </nav>
 
   <script>
+const UPDATED_AT = "2026-09-10T13:58:41Z";
+
 const DATA = [
   {
-    id: 'llama8b-eagle3',
-    name: 'RedHatAI/Llama-3.1-8B-Instruct-speculator.eagle3',
-    target: 'meta-llama/Llama-3.1-8B-Instruct',
-    algorithm: 'eagle3',
-    runs: [
-      { hardware: '1xH100', date: '2026-08-06', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.723, throughput: 4074.7, latency: 3.38 },
-      { hardware: '2xA100-80G', date: '2026-07-22', vllm: '0.10.0', speculators: '0.3.0', acceptance: 0.701, throughput: 2981.2, latency: 4.12 },
-      { hardware: '1xH100', date: '2026-06-30', vllm: '0.9.4', speculators: '0.2.8', acceptance: 0.688, throughput: 3902.4, latency: 3.51 }
-    ],
-    speedBench: [
-      { subset: 'humaneval', score: 81.7, tokensPerSec: 5634.3 },
-      { subset: 'math_reasoning', score: 64.2, tokensPerSec: 3662.1 },
-      { subset: 'summarization', score: 48.9, tokensPerSec: 3011.5 }
-    ]
+    "model": "RedHatAI/Llama-3.1-8B-Instruct-speculator.eagle3",
+    "target": "meta-llama/Llama-3.1-8B-Instruct",
+    "algorithm": "eagle3",
+    "gpus": "1xh100",
+    "evaluated_at": "2026-08-06T16:32:18Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 3.0322,
+      "throughput_tps": 4074.73,
+      "ttft_ms": 31.86,
+      "itl_ms": 3.38,
+      "num_drafts": 475021
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 3.5799,
+        "throughput_tps": 5634.34,
+        "itl_ms": 2.88,
+        "ttft_ms": 30.24
+      },
+      "math_reasoning": {
+        "acceptance_length": 3.2375,
+        "throughput_tps": 3662.11,
+        "itl_ms": 3.09,
+        "ttft_ms": 31.37
+      },
+      "qa": {
+        "acceptance_length": 2.4226,
+        "throughput_tps": 2886.21,
+        "itl_ms": 4.32,
+        "ttft_ms": 31.53
+      },
+      "question": {
+        "acceptance_length": 2.9388,
+        "throughput_tps": 3714.14,
+        "itl_ms": 3.41,
+        "ttft_ms": 31.62
+      },
+      "rag": {
+        "acceptance_length": 3.1108,
+        "throughput_tps": 2360.35,
+        "itl_ms": 3.26,
+        "ttft_ms": 32.95
+      },
+      "summarization": {
+        "acceptance_length": 2.9113,
+        "throughput_tps": 4186.85,
+        "itl_ms": 4.0,
+        "ttft_ms": 35.55
+      },
+      "tool_call": {
+        "acceptance_length": 3.0042,
+        "throughput_tps": 3351.4,
+        "itl_ms": 3.47,
+        "ttft_ms": 33.18
+      },
+      "translation": {
+        "acceptance_length": 2.1079,
+        "throughput_tps": 2239.7,
+        "itl_ms": 4.74,
+        "ttft_ms": 31.01
+      },
+      "writing": {
+        "acceptance_length": 2.9485,
+        "throughput_tps": 3778.66,
+        "itl_ms": 3.29,
+        "ttft_ms": 30.6
+      }
+    }
   },
   {
-    id: 'llama8b-mtp',
-    name: 'nvidia/Llama-3.1-8B-Instruct-speculator.mtp',
-    target: 'meta-llama/Llama-3.1-8B-Instruct',
-    algorithm: 'mtp',
-    runs: [
-      { hardware: '1xH100', date: '2026-08-14', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.654, throughput: 3521.8, latency: 3.92 }
-    ],
-    speedBench: []
+    "model": "RedHatAI/Mellum2-12B-A2.5B-Thinking-speculator.dflash",
+    "target": "JetBrains/Mellum2-12B-A2.5B-Thinking",
+    "algorithm": "dflash",
+    "gpus": "1xh100",
+    "evaluated_at": "2026-08-26T15:53:40Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 2.7988,
+      "throughput_tps": 4061.1,
+      "ttft_ms": 50.28,
+      "itl_ms": 4.21,
+      "num_drafts": 2069564
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 3.3754,
+        "throughput_tps": 4162.46,
+        "itl_ms": 3.49,
+        "ttft_ms": 47.47
+      },
+      "math_reasoning": {
+        "acceptance_length": 3.893,
+        "throughput_tps": 4974.48,
+        "itl_ms": 2.83,
+        "ttft_ms": 48.21
+      },
+      "qa": {
+        "acceptance_length": 2.5906,
+        "throughput_tps": 3906.39,
+        "itl_ms": 4.58,
+        "ttft_ms": 49.71
+      },
+      "question": {
+        "acceptance_length": 2.7803,
+        "throughput_tps": 3764.62,
+        "itl_ms": 4.38,
+        "ttft_ms": 49.3
+      },
+      "rag": {
+        "acceptance_length": 2.7833,
+        "throughput_tps": 3862.64,
+        "itl_ms": 4.23,
+        "ttft_ms": 53.2
+      },
+      "summarization": {
+        "acceptance_length": 2.4017,
+        "throughput_tps": 3721.24,
+        "itl_ms": 5.18,
+        "ttft_ms": 53.0
+      },
+      "tool_call": {
+        "acceptance_length": 2.884,
+        "throughput_tps": 4528.65,
+        "itl_ms": 4.31,
+        "ttft_ms": 54.02
+      },
+      "translation": {
+        "acceptance_length": 2.5456,
+        "throughput_tps": 4053.51,
+        "itl_ms": 4.56,
+        "ttft_ms": 50.6
+      },
+      "writing": {
+        "acceptance_length": 2.7863,
+        "throughput_tps": 3808.96,
+        "itl_ms": 4.36,
+        "ttft_ms": 49.77
+      }
+    }
   },
   {
-    id: 'qwen3-8b-dflash',
-    name: 'RedHatAI/Qwen3-8B-speculator.dflash',
-    target: 'Qwen/Qwen3-8B',
-    algorithm: 'dflash',
-    runs: [
-      { hardware: '1xH100', date: '2026-08-19', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.745, throughput: 5120.6, latency: 2.71 },
-      { hardware: '1xL40S', date: '2026-07-05', vllm: '0.10.1', speculators: '0.3.0', acceptance: 0.732, throughput: 3864.1, latency: 3.44 }
-    ],
-    speedBench: []
+    "model": "RedHatAI/Qwen3-14B-speculator.eagle3",
+    "target": "Qwen/Qwen3-14B",
+    "algorithm": "eagle3",
+    "gpus": "1xh100",
+    "evaluated_at": "2026-08-26T19:37:15Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 2.4048,
+      "throughput_tps": 2164.16,
+      "ttft_ms": 50.23,
+      "itl_ms": 7.41,
+      "num_drafts": 3201595
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 2.521,
+        "throughput_tps": 2048.48,
+        "itl_ms": 7.37,
+        "ttft_ms": 51.71
+      },
+      "math_reasoning": {
+        "acceptance_length": 2.6762,
+        "throughput_tps": 2494.1,
+        "itl_ms": 6.6,
+        "ttft_ms": 49.54
+      },
+      "qa": {
+        "acceptance_length": 2.205,
+        "throughput_tps": 2455.68,
+        "itl_ms": 8.11,
+        "ttft_ms": 50.59
+      },
+      "question": {
+        "acceptance_length": 2.3437,
+        "throughput_tps": 1922.89,
+        "itl_ms": 7.35,
+        "ttft_ms": 47.89
+      },
+      "rag": {
+        "acceptance_length": 2.3285,
+        "throughput_tps": 2055.89,
+        "itl_ms": 7.68,
+        "ttft_ms": 51.85
+      },
+      "summarization": {
+        "acceptance_length": 2.1551,
+        "throughput_tps": 1912.4,
+        "itl_ms": 8.37,
+        "ttft_ms": 52.65
+      },
+      "tool_call": {
+        "acceptance_length": 2.3783,
+        "throughput_tps": 2412.46,
+        "itl_ms": 7.79,
+        "ttft_ms": 53.72
+      },
+      "translation": {
+        "acceptance_length": 2.3203,
+        "throughput_tps": 2440.9,
+        "itl_ms": 7.43,
+        "ttft_ms": 47.29
+      },
+      "writing": {
+        "acceptance_length": 2.3423,
+        "throughput_tps": 2038.76,
+        "itl_ms": 7.43,
+        "ttft_ms": 48.87
+      }
+    }
   },
   {
-    id: 'qwen3-14b-eagle3',
-    name: 'RedHatAI/Qwen3-14B-speculator.eagle3',
-    target: 'Qwen/Qwen3-14B',
-    algorithm: 'eagle3',
-    runs: [
-      { hardware: '2xA100-80G', date: '2026-08-11', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.698, throughput: 2648.9, latency: 5.37 }
-    ],
-    speedBench: []
+    "model": "RedHatAI/Qwen3-30B-A3B-Instruct-2507-speculator.dflash",
+    "target": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "algorithm": "dflash",
+    "gpus": "4xh100",
+    "evaluated_at": "2026-09-09T06:56:13Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 2.83,
+      "throughput_tps": 3043.69,
+      "ttft_ms": 32.37,
+      "itl_ms": 3.41,
+      "num_drafts": 537978
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 4.1395,
+        "throughput_tps": 3981.83,
+        "itl_ms": 2.4,
+        "ttft_ms": 31.7
+      },
+      "math_reasoning": {
+        "acceptance_length": 4.5388,
+        "throughput_tps": 3793.61,
+        "itl_ms": 2.17,
+        "ttft_ms": 32.13
+      },
+      "qa": {
+        "acceptance_length": 2.1697,
+        "throughput_tps": 2501.11,
+        "itl_ms": 4.54,
+        "ttft_ms": 31.39
+      },
+      "question": {
+        "acceptance_length": 2.7203,
+        "throughput_tps": 2906.63,
+        "itl_ms": 3.75,
+        "ttft_ms": 31.72
+      },
+      "rag": {
+        "acceptance_length": 2.4292,
+        "throughput_tps": 2664.62,
+        "itl_ms": 4.11,
+        "ttft_ms": 33.58
+      },
+      "summarization": {
+        "acceptance_length": 2.1933,
+        "throughput_tps": 2115.17,
+        "itl_ms": 4.1,
+        "ttft_ms": 31.49
+      },
+      "tool_call": {
+        "acceptance_length": 2.826,
+        "throughput_tps": 1894.33,
+        "itl_ms": 3.44,
+        "ttft_ms": 34.07
+      },
+      "translation": {
+        "acceptance_length": 2.3261,
+        "throughput_tps": 691.99,
+        "itl_ms": 4.56,
+        "ttft_ms": 33.94
+      },
+      "writing": {
+        "acceptance_length": 2.7093,
+        "throughput_tps": 2915.26,
+        "itl_ms": 3.84,
+        "ttft_ms": 33.76
+      }
+    }
   },
   {
-    id: 'qwen3-14b-dspark',
-    name: 'RedHatAI/Qwen3-14B-speculator.dspark',
-    target: 'Qwen/Qwen3-14B',
-    algorithm: 'dspark',
-    runs: [
-      { hardware: '2xA100-80G', date: '2026-09-02', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.717, throughput: 2812.3, latency: 5.04 }
-    ],
-    speedBench: []
+    "model": "RedHatAI/Qwen3-30B-A3B-Thinking-2507-speculator.eagle3",
+    "target": "Qwen/Qwen3-30B-A3B",
+    "algorithm": "eagle3",
+    "gpus": "4xh100",
+    "evaluated_at": "2026-09-09T11:55:41Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 3.2835,
+      "throughput_tps": 3165.66,
+      "ttft_ms": 47.23,
+      "itl_ms": 3.01,
+      "num_drafts": 2531340
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 3.7544,
+        "throughput_tps": 3353.89,
+        "itl_ms": 2.69,
+        "ttft_ms": 47.73
+      },
+      "math_reasoning": {
+        "acceptance_length": 4.1292,
+        "throughput_tps": 4063.74,
+        "itl_ms": 2.44,
+        "ttft_ms": 46.79
+      },
+      "qa": {
+        "acceptance_length": 2.8167,
+        "throughput_tps": 2788.68,
+        "itl_ms": 3.4,
+        "ttft_ms": 45.59
+      },
+      "question": {
+        "acceptance_length": 3.143,
+        "throughput_tps": 2821.11,
+        "itl_ms": 3.11,
+        "ttft_ms": 46.6
+      },
+      "rag": {
+        "acceptance_length": 3.1311,
+        "throughput_tps": 3370.28,
+        "itl_ms": 3.25,
+        "ttft_ms": 48.75
+      },
+      "summarization": {
+        "acceptance_length": 2.6005,
+        "throughput_tps": 2185.08,
+        "itl_ms": 3.75,
+        "ttft_ms": 48.39
+      },
+      "tool_call": {
+        "acceptance_length": 3.0165,
+        "throughput_tps": 2982.98,
+        "itl_ms": 3.82,
+        "ttft_ms": 52.65
+      },
+      "translation": {
+        "acceptance_length": 2.9883,
+        "throughput_tps": 3137.14,
+        "itl_ms": 3.26,
+        "ttft_ms": 46.54
+      },
+      "writing": {
+        "acceptance_length": 3.149,
+        "throughput_tps": 2752.7,
+        "itl_ms": 3.09,
+        "ttft_ms": 46.29
+      }
+    }
   },
   {
-    id: 'qwen3-32b-dflash',
-    name: 'RedHatAI/Qwen3-32B-speculator.dflash',
-    target: 'Qwen/Qwen3-32B',
-    algorithm: 'dflash',
-    runs: [
-      { hardware: '2xH100', date: '2026-08-27', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.709, throughput: 1712.5, latency: 9.86 },
-      { hardware: '4xA100-80G', date: '2026-07-15', vllm: '0.10.0', speculators: '0.3.0', acceptance: 0.694, throughput: 1398.2, latency: 11.42 }
-    ],
-    speedBench: []
+    "model": "RedHatAI/Qwen3-30B-A3B-speculator.dflash",
+    "target": "Qwen/Qwen3-30B-A3B",
+    "algorithm": "dflash",
+    "gpus": "4xh100",
+    "evaluated_at": "2026-09-08T20:14:37Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 3.013,
+      "throughput_tps": 3194.85,
+      "ttft_ms": 40.71,
+      "itl_ms": 3.01,
+      "num_drafts": 2755378
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 3.4337,
+        "throughput_tps": 3444.95,
+        "itl_ms": 2.76,
+        "ttft_ms": 42.13
+      },
+      "math_reasoning": {
+        "acceptance_length": 3.7731,
+        "throughput_tps": 4029.8,
+        "itl_ms": 2.44,
+        "ttft_ms": 40.36
+      },
+      "qa": {
+        "acceptance_length": 2.5866,
+        "throughput_tps": 2642.19,
+        "itl_ms": 3.35,
+        "ttft_ms": 38.14
+      },
+      "question": {
+        "acceptance_length": 2.9139,
+        "throughput_tps": 2996.47,
+        "itl_ms": 3.19,
+        "ttft_ms": 40.6
+      },
+      "rag": {
+        "acceptance_length": 2.8513,
+        "throughput_tps": 3105.19,
+        "itl_ms": 3.14,
+        "ttft_ms": 41.11
+      },
+      "summarization": {
+        "acceptance_length": 2.4642,
+        "throughput_tps": 2425.46,
+        "itl_ms": 3.41,
+        "ttft_ms": 39.7
+      },
+      "tool_call": {
+        "acceptance_length": 2.8101,
+        "throughput_tps": 3119.74,
+        "itl_ms": 3.53,
+        "ttft_ms": 44.27
+      },
+      "translation": {
+        "acceptance_length": 2.6249,
+        "throughput_tps": 2711.48,
+        "itl_ms": 3.17,
+        "ttft_ms": 37.18
+      },
+      "writing": {
+        "acceptance_length": 2.91,
+        "throughput_tps": 2987.0,
+        "itl_ms": 3.22,
+        "ttft_ms": 41.3
+      }
+    }
   },
   {
-    id: 'gptoss20b-eagle3',
-    name: 'zai-org/gpt-oss-20b-speculator.eagle3',
-    target: 'openai/gpt-oss-20b',
-    algorithm: 'eagle3',
-    runs: [
-      { hardware: '1xH100', date: '2026-08-30', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.682, throughput: 2241.7, latency: 6.18 }
-    ],
-    speedBench: []
+    "model": "RedHatAI/Qwen3-32B-Thinking-speculator.eagle3",
+    "target": "Qwen/Qwen3-32B",
+    "algorithm": "eagle3",
+    "gpus": "4xh100",
+    "evaluated_at": "2026-09-10T12:18:11Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 3.3294,
+      "throughput_tps": 3407.6,
+      "ttft_ms": 62.11,
+      "itl_ms": 4.55,
+      "num_drafts": 2451465
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 3.5552,
+        "throughput_tps": 3435.13,
+        "itl_ms": 4.45,
+        "ttft_ms": 61.89
+      },
+      "math_reasoning": {
+        "acceptance_length": 4.2906,
+        "throughput_tps": 4452.7,
+        "itl_ms": 3.67,
+        "ttft_ms": 63.62
+      },
+      "qa": {
+        "acceptance_length": 2.9722,
+        "throughput_tps": 3004.0,
+        "itl_ms": 4.98,
+        "ttft_ms": 59.77
+      },
+      "question": {
+        "acceptance_length": 3.2268,
+        "throughput_tps": 3187.57,
+        "itl_ms": 4.51,
+        "ttft_ms": 59.27
+      },
+      "rag": {
+        "acceptance_length": 3.1452,
+        "throughput_tps": 3293.92,
+        "itl_ms": 5.34,
+        "ttft_ms": 70.0
+      },
+      "summarization": {
+        "acceptance_length": 2.7558,
+        "throughput_tps": 2879.49,
+        "itl_ms": 5.35,
+        "ttft_ms": 64.56
+      },
+      "tool_call": {
+        "acceptance_length": 3.213,
+        "throughput_tps": 3395.66,
+        "itl_ms": 4.97,
+        "ttft_ms": 68.01
+      },
+      "translation": {
+        "acceptance_length": 3.0509,
+        "throughput_tps": 3328.7,
+        "itl_ms": 5.01,
+        "ttft_ms": 63.33
+      },
+      "writing": {
+        "acceptance_length": 3.2342,
+        "throughput_tps": 3083.6,
+        "itl_ms": 4.33,
+        "ttft_ms": 58.37
+      }
+    }
   },
   {
-    id: 'gptoss20b-dflash',
-    name: 'RedHatAI/gpt-oss-20b-speculator.dflash',
-    target: 'openai/gpt-oss-20b',
-    algorithm: 'dflash',
-    runs: [
-      { hardware: '1xH100', date: '2026-09-08', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.726, throughput: 2518.4, latency: 5.62 },
-      { hardware: '1xL40S', date: '2026-08-02', vllm: '0.10.1', speculators: '0.3.0', acceptance: 0.711, throughput: 1904.6, latency: 7.05 }
-    ],
-    speedBench: []
+    "model": "RedHatAI/Qwen3-8B-speculator.dflash",
+    "target": "Qwen/Qwen3-8B",
+    "algorithm": "dflash",
+    "gpus": "1xh100",
+    "evaluated_at": "2026-08-06T15:56:36Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 2.1754,
+      "throughput_tps": 3319.63,
+      "ttft_ms": 33.65,
+      "itl_ms": 5.09,
+      "num_drafts": 4021649
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 2.4191,
+        "throughput_tps": 3257.27,
+        "itl_ms": 5.03,
+        "ttft_ms": 33.58
+      },
+      "math_reasoning": {
+        "acceptance_length": 2.5643,
+        "throughput_tps": 4230.03,
+        "itl_ms": 4.31,
+        "ttft_ms": 33.07
+      },
+      "qa": {
+        "acceptance_length": 1.9822,
+        "throughput_tps": 3075.15,
+        "itl_ms": 5.34,
+        "ttft_ms": 31.47
+      },
+      "question": {
+        "acceptance_length": 2.101,
+        "throughput_tps": 2937.19,
+        "itl_ms": 5.07,
+        "ttft_ms": 33.11
+      },
+      "rag": {
+        "acceptance_length": 2.0337,
+        "throughput_tps": 3231.27,
+        "itl_ms": 5.66,
+        "ttft_ms": 36.11
+      },
+      "summarization": {
+        "acceptance_length": 1.8222,
+        "throughput_tps": 2724.28,
+        "itl_ms": 6.21,
+        "ttft_ms": 38.29
+      },
+      "tool_call": {
+        "acceptance_length": 1.9889,
+        "throughput_tps": 3264.59,
+        "itl_ms": 5.55,
+        "ttft_ms": 35.67
+      },
+      "translation": {
+        "acceptance_length": 1.8999,
+        "throughput_tps": 3507.36,
+        "itl_ms": 5.55,
+        "ttft_ms": 33.3
+      },
+      "writing": {
+        "acceptance_length": 2.1068,
+        "throughput_tps": 3038.61,
+        "itl_ms": 5.03,
+        "ttft_ms": 33.54
+      }
+    }
   },
   {
-    id: 'gemma4-31b-peagle',
-    name: 'RedHatAI/gemma-4-31B-it-speculator.peagle',
-    target: 'google/gemma-4-31B-it',
-    algorithm: 'peagle',
-    runs: [
-      { hardware: '2xH100', date: '2026-09-05', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.691, throughput: 1488.3, latency: 10.74 },
-      { hardware: '4xA100-80G', date: '2026-07-28', vllm: '0.10.1', speculators: '0.3.0', acceptance: 0.668, throughput: 1206.9, latency: 12.93 }
-    ],
-    speedBench: [
-      { subset: 'humaneval', score: 72.4, tokensPerSec: 2108.6 },
-      { subset: 'qa', score: 55.8, tokensPerSec: 1632.4 }
-    ]
+    "model": "RedHatAI/Qwen3-8B-speculator.eagle3",
+    "target": "Qwen/Qwen3-8B",
+    "algorithm": "eagle3",
+    "gpus": "1xh100",
+    "evaluated_at": "2026-08-06T13:57:48Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 2.4644,
+      "throughput_tps": 3659.48,
+      "ttft_ms": 35.36,
+      "itl_ms": 4.82,
+      "num_drafts": 3545881
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 2.5521,
+        "throughput_tps": 3352.87,
+        "itl_ms": 4.99,
+        "ttft_ms": 37.76
+      },
+      "math_reasoning": {
+        "acceptance_length": 2.7086,
+        "throughput_tps": 4372.14,
+        "itl_ms": 4.36,
+        "ttft_ms": 34.82
+      },
+      "qa": {
+        "acceptance_length": 2.3558,
+        "throughput_tps": 3272.51,
+        "itl_ms": 4.68,
+        "ttft_ms": 32.57
+      },
+      "question": {
+        "acceptance_length": 2.416,
+        "throughput_tps": 3509.52,
+        "itl_ms": 4.75,
+        "ttft_ms": 34.37
+      },
+      "rag": {
+        "acceptance_length": 2.421,
+        "throughput_tps": 3665.01,
+        "itl_ms": 5.11,
+        "ttft_ms": 36.43
+      },
+      "summarization": {
+        "acceptance_length": 2.2543,
+        "throughput_tps": 3278.81,
+        "itl_ms": 5.44,
+        "ttft_ms": 36.98
+      },
+      "tool_call": {
+        "acceptance_length": 2.3466,
+        "throughput_tps": 3808.63,
+        "itl_ms": 5.23,
+        "ttft_ms": 37.53
+      },
+      "translation": {
+        "acceptance_length": 2.3442,
+        "throughput_tps": 4253.67,
+        "itl_ms": 4.84,
+        "ttft_ms": 33.18
+      },
+      "writing": {
+        "acceptance_length": 2.4135,
+        "throughput_tps": 3707.31,
+        "itl_ms": 4.7,
+        "ttft_ms": 33.81
+      }
+    }
+  },
+  {
+    "model": "RedHatAI/Qwen3-8B-speculator.peagle",
+    "target": "qwen/qwen3-8b",
+    "algorithm": "peagle",
+    "gpus": "1xa100",
+    "evaluated_at": "2026-08-26T13:24:03Z",
+    "status": "failed",
+    "error": "vLLM 0.26.1rc1 SpeculativeConfig rejects method 'peagle' (unsupported in this build; valid: eagle/eagle3/dflash/dspark/mtp)"
+  },
+  {
+    "model": "RedHatAI/Qwen3.6-35B-A3B-speculator.dspark",
+    "target": "Qwen/Qwen3.6-35B-A3B",
+    "algorithm": "dspark",
+    "gpus": "4xh100",
+    "evaluated_at": "2026-08-26T17:47:25Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 3.4511,
+      "throughput_tps": 3893.78,
+      "ttft_ms": 115.1,
+      "itl_ms": 5.98,
+      "num_drafts": 2992303
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 3.9943,
+        "throughput_tps": 4502.16,
+        "itl_ms": 4.27,
+        "ttft_ms": 84.64
+      },
+      "math_reasoning": {
+        "acceptance_length": 4.4337,
+        "throughput_tps": 5384.28,
+        "itl_ms": 6.06,
+        "ttft_ms": 142.75
+      },
+      "qa": {
+        "acceptance_length": 3.0898,
+        "throughput_tps": 3527.34,
+        "itl_ms": 6.04,
+        "ttft_ms": 88.35
+      },
+      "question": {
+        "acceptance_length": 3.3861,
+        "throughput_tps": 3997.71,
+        "itl_ms": 5.3,
+        "ttft_ms": 87.0
+      },
+      "rag": {
+        "acceptance_length": 3.5355,
+        "throughput_tps": 3482.12,
+        "itl_ms": 8.76,
+        "ttft_ms": 297.17
+      },
+      "summarization": {
+        "acceptance_length": 3.2952,
+        "throughput_tps": 3718.14,
+        "itl_ms": 8.13,
+        "ttft_ms": 140.76
+      },
+      "tool_call": {
+        "acceptance_length": 3.1266,
+        "throughput_tps": 2803.16,
+        "itl_ms": 9.49,
+        "ttft_ms": 166.57
+      },
+      "translation": {
+        "acceptance_length": 3.137,
+        "throughput_tps": 3770.89,
+        "itl_ms": 6.46,
+        "ttft_ms": 88.49
+      },
+      "writing": {
+        "acceptance_length": 3.3432,
+        "throughput_tps": 3349.14,
+        "itl_ms": 4.76,
+        "ttft_ms": 92.61
+      }
+    }
+  },
+  {
+    "model": "RedHatAI/gemma-4-26B-A4B-it-speculator.eagle3",
+    "target": "google/gemma-4-26B-A4B-it",
+    "algorithm": "eagle3",
+    "gpus": "1xh100",
+    "evaluated_at": "2026-08-26T15:00:26Z",
+    "status": "failed",
+    "error": "vLLM cannot load gemma-4 (heterogeneous per-layer config). get_head_size in vllm/transformers_utils/model_arch_config_convertor.py:608 calls"
+  },
+  {
+    "model": "RedHatAI/gemma-4-31B-it-speculator.dflash",
+    "target": "google/gemma-4-31B-it",
+    "algorithm": "dflash",
+    "gpus": "2xa100",
+    "evaluated_at": "2026-09-09T14:43:48Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 3.4234,
+      "throughput_tps": 848.85,
+      "ttft_ms": 136.19,
+      "itl_ms": 14.6,
+      "num_drafts": 382931
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 4.9568,
+        "throughput_tps": 1081.84,
+        "itl_ms": 10.32,
+        "ttft_ms": 123.45
+      },
+      "math_reasoning": {
+        "acceptance_length": 4.9815,
+        "throughput_tps": 1202.36,
+        "itl_ms": 11.22,
+        "ttft_ms": 147.4
+      },
+      "qa": {
+        "acceptance_length": 2.6214,
+        "throughput_tps": 652.0,
+        "itl_ms": 18.02,
+        "ttft_ms": 111.63
+      },
+      "question": {
+        "acceptance_length": 3.2992,
+        "throughput_tps": 770.91,
+        "itl_ms": 13.53,
+        "ttft_ms": 121.15
+      },
+      "rag": {
+        "acceptance_length": 3.4223,
+        "throughput_tps": 493.09,
+        "itl_ms": 19.72,
+        "ttft_ms": 193.33
+      },
+      "summarization": {
+        "acceptance_length": 2.5463,
+        "throughput_tps": 596.21,
+        "itl_ms": 27.47,
+        "ttft_ms": 194.75
+      },
+      "tool_call": {
+        "acceptance_length": 2.8934,
+        "throughput_tps": 277.23,
+        "itl_ms": 15.57,
+        "ttft_ms": 246.37
+      },
+      "translation": {
+        "acceptance_length": 3.1416,
+        "throughput_tps": 859.92,
+        "itl_ms": 17.75,
+        "ttft_ms": 153.6
+      },
+      "writing": {
+        "acceptance_length": 3.3044,
+        "throughput_tps": 777.86,
+        "itl_ms": 13.81,
+        "ttft_ms": 117.41
+      }
+    }
+  },
+  {
+    "model": "RedHatAI/gemma-4-31B-it-speculator.dspark",
+    "target": "google/gemma-4-31B-it",
+    "algorithm": "dspark",
+    "gpus": "1xh100",
+    "evaluated_at": "2026-08-26T15:00:26Z",
+    "status": "failed",
+    "error": "vLLM cannot load gemma-4 (heterogeneous per-layer config). get_head_size in vllm/transformers_utils/model_arch_config_convertor.py:608 calls"
+  },
+  {
+    "model": "RedHatAI/gemma-4-31B-it-speculator.eagle3",
+    "target": "google/gemma-4-31B-it",
+    "algorithm": "eagle3",
+    "gpus": "2xa100",
+    "evaluated_at": "2026-09-10T13:58:41Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 3.0476,
+      "throughput_tps": 739.64,
+      "ttft_ms": 147.7,
+      "itl_ms": 16.97,
+      "num_drafts": 429798
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 4.2904,
+        "throughput_tps": 867.58,
+        "itl_ms": 11.76,
+        "ttft_ms": 128.75
+      },
+      "math_reasoning": {
+        "acceptance_length": 4.3263,
+        "throughput_tps": 1057.56,
+        "itl_ms": 13.85,
+        "ttft_ms": 160.43
+      },
+      "qa": {
+        "acceptance_length": 2.3912,
+        "throughput_tps": 584.96,
+        "itl_ms": 20.42,
+        "ttft_ms": 131.01
+      },
+      "question": {
+        "acceptance_length": 2.9692,
+        "throughput_tps": 672.77,
+        "itl_ms": 16.32,
+        "ttft_ms": 130.39
+      },
+      "rag": {
+        "acceptance_length": 2.9696,
+        "throughput_tps": 467.82,
+        "itl_ms": 23.68,
+        "ttft_ms": 224.08
+      },
+      "summarization": {
+        "acceptance_length": 2.2321,
+        "throughput_tps": 544.34,
+        "itl_ms": 30.83,
+        "ttft_ms": 204.48
+      },
+      "tool_call": {
+        "acceptance_length": 2.5245,
+        "throughput_tps": 262.36,
+        "itl_ms": 17.6,
+        "ttft_ms": 298.05
+      },
+      "translation": {
+        "acceptance_length": 2.8311,
+        "throughput_tps": 777.49,
+        "itl_ms": 19.79,
+        "ttft_ms": 155.28
+      },
+      "writing": {
+        "acceptance_length": 2.9649,
+        "throughput_tps": 694.75,
+        "itl_ms": 16.43,
+        "ttft_ms": 132.63
+      }
+    }
+  },
+  {
+    "model": "RedHatAI/gpt-oss-20b-speculator.eagle3",
+    "target": "openai/gpt-oss-20b",
+    "algorithm": "eagle3",
+    "gpus": "1xh100",
+    "evaluated_at": "2026-08-06T17:32:10Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 2.1906,
+      "throughput_tps": 3103.7,
+      "ttft_ms": 51.1,
+      "itl_ms": 5.46,
+      "num_drafts": 1943023
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 2.501,
+        "throughput_tps": 3604.84,
+        "itl_ms": 4.96,
+        "ttft_ms": 52.62
+      },
+      "math_reasoning": {
+        "acceptance_length": 2.8021,
+        "throughput_tps": 3730.82,
+        "itl_ms": 4.18,
+        "ttft_ms": 48.32
+      },
+      "qa": {
+        "acceptance_length": 1.9604,
+        "throughput_tps": 2736.05,
+        "itl_ms": 6.16,
+        "ttft_ms": 50.17
+      },
+      "question": {
+        "acceptance_length": 2.1884,
+        "throughput_tps": 3024.38,
+        "itl_ms": 5.42,
+        "ttft_ms": 51.77
+      },
+      "rag": {
+        "acceptance_length": 2.1029,
+        "throughput_tps": 2980.35,
+        "itl_ms": 5.83,
+        "ttft_ms": 51.17
+      },
+      "summarization": {
+        "acceptance_length": 2.149,
+        "throughput_tps": 3471.02,
+        "itl_ms": 6.03,
+        "ttft_ms": 56.1
+      },
+      "tool_call": {
+        "acceptance_length": 2.1474,
+        "throughput_tps": 2730.88,
+        "itl_ms": 5.75,
+        "ttft_ms": 52.8
+      },
+      "translation": {
+        "acceptance_length": 2.4436,
+        "throughput_tps": 2981.58,
+        "itl_ms": 4.68,
+        "ttft_ms": 49.97
+      },
+      "writing": {
+        "acceptance_length": 2.1872,
+        "throughput_tps": 2953.71,
+        "itl_ms": 5.26,
+        "ttft_ms": 49.27
+      }
+    }
+  },
+  {
+    "model": "poolside/Laguna-XS.2-speculator.dflash",
+    "target": "poolside/Laguna-XS.2",
+    "algorithm": "dflash",
+    "gpus": "1xa100",
+    "evaluated_at": "2026-09-08T18:39:24Z",
+    "status": "ok",
+    "metrics": {
+      "acceptance_length": 2.5181,
+      "throughput_tps": 833.96,
+      "ttft_ms": 139.72,
+      "itl_ms": 20.04,
+      "num_drafts": 569221
+    },
+    "subsets": {
+      "HumanEval": {
+        "acceptance_length": 3.1314,
+        "throughput_tps": 1155.09,
+        "itl_ms": 16.8,
+        "ttft_ms": 139.41
+      },
+      "math_reasoning": {
+        "acceptance_length": 3.2485,
+        "throughput_tps": 1208.97,
+        "itl_ms": 14.88,
+        "ttft_ms": 124.55
+      },
+      "qa": {
+        "acceptance_length": 2.0379,
+        "throughput_tps": 687.09,
+        "itl_ms": 21.69,
+        "ttft_ms": 115.41
+      },
+      "question": {
+        "acceptance_length": 2.3824,
+        "throughput_tps": 701.65,
+        "itl_ms": 18.4,
+        "ttft_ms": 124.41
+      },
+      "rag": {
+        "acceptance_length": 2.3966,
+        "throughput_tps": 567.93,
+        "itl_ms": 25.3,
+        "ttft_ms": 168.03
+      },
+      "summarization": {
+        "acceptance_length": 2.2927,
+        "throughput_tps": 628.48,
+        "itl_ms": 25.38,
+        "ttft_ms": 170.6
+      },
+      "tool_call": {
+        "acceptance_length": 2.1034,
+        "throughput_tps": 494.12,
+        "itl_ms": 33.06,
+        "ttft_ms": 198.22
+      },
+      "translation": {
+        "acceptance_length": 2.1703,
+        "throughput_tps": 600.22,
+        "itl_ms": 22.88,
+        "ttft_ms": 124.45
+      },
+      "writing": {
+        "acceptance_length": 2.3897,
+        "throughput_tps": 660.51,
+        "itl_ms": 19.07,
+        "ttft_ms": 122.85
+      }
+    }
   }
 ];
 
 const METRICS = {
-  acceptance: { label: 'Acceptance (%)', fmt: function (v) { return (v * 100).toFixed(1) + '%'; }, raw: function (r) { return r.acceptance; } },
-  throughput: { label: 'Throughput (tok/s)', fmt: function (v) { return Math.round(v).toLocaleString('en-US'); }, raw: function (r) { return r.throughput; } },
-  latency: { label: 'Latency (ms/tok)', fmt: function (v) { return v.toFixed(2); }, raw: function (r) { return r.latency; } }
+  acceptance: { label: 'Acceptance', unit: 'tokens', field: 'acceptance_length', better: 'max', fmt: function (v) { return v.toFixed(2); } },
+  throughput: { label: 'Throughput', unit: 'tok/s', field: 'throughput_tps', better: 'max', fmt: function (v) { return Math.round(v).toLocaleString('en-US'); } },
+  latency: { label: 'Latency', unit: 'ms/tok', field: 'itl_ms', better: 'min', fmt: function (v) { return v.toFixed(2); } }
 };
 
-const VARIANTS = ['a', 'b', 'c'];
-const VARIANT_LABELS = { a: 'A - Integrated', b: 'B - Dash First', c: 'C - Two Views' };
+const ALGO_COLORS = { eagle3: 'var(--eagle3)', dflash: 'var(--dflash)', peagle: 'var(--peagle)', mtp: 'var(--mtp)', dspark: 'var(--dspark)' };
+
+const SOURCES = {
+  specBench: {
+    label: 'Speculator Benchmarks',
+    desc: 'Per-subset results from the speculator_benchmarks eval sweep: one bar per drafter, colored by algorithm. Task splits come from the <a href="https://huggingface.co/datasets/RedHatAI/speculator_benchmarks" target="_blank" rel="noopener">RedHatAI/speculator_benchmarks</a> dataset.',
+    empty: null
+  },
+  speedBench: {
+    label: 'SPEED-Bench',
+    desc: 'Scores from the SPEED-Bench suite appear here once the eval harness reports them.',
+    empty: 'No SPEED-Bench results yet. The eval harness has not reported scores for this suite.'
+  }
+};
+
+const VARIANTS = ['a', 'b'];
+const VARIANT_LABELS = { a: 'A - Source Tabs', b: 'B - Two Sections' };
 
 const state = {
   variant: readVariant(),
   theme: 'dark',
-  metric: 'acceptance',
-  selected: DATA[0].id,
-  query: '',
-  cView: 'landing'
+  metric: 'throughput',
+  source: 'specBench',
+  filters: { target: 'all', algorithm: 'all', text: '' },
+  sort: { key: 'throughput', dir: -1 }
 };
 
 const LOGO_SVG = `<svg viewBox="0 0 78 91" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -884,46 +1850,55 @@ function readVariant() {
 }
 
 function short(name) {
-  const parts = name.split('/');
-  return parts[parts.length - 1];
+  const idx = name.indexOf('/');
+  return idx >= 0 ? name.substring(idx + 1) : name;
 }
 
 function algoClass(algo) {
-  const map = { eagle3: 'algo-eagle3', dflash: 'algo-dflash', peagle: 'algo-peagle', mtp: 'algo-mtp', dspark: 'algo-other' };
+  const map = { eagle3: 'algo-eagle3', dflash: 'algo-dflash', peagle: 'algo-peagle', mtp: 'algo-mtp', dspark: 'algo-dspark' };
   return map[algo] || 'algo-other';
 }
 
-function selectedDrafter() {
-  return DATA.find(function (x) { return x.id === state.selected; }) || DATA[0];
+function formatHardware(gpus) {
+  if (!gpus) return 'unknown';
+  const match = gpus.match(/^(\d+)x(.+)$/i);
+  return match ? match[1] + 'x ' + match[2].toUpperCase() : gpus;
 }
 
-function themeBtnHTML() {
-  return '<button type="button" class="theme-toggle" data-theme-toggle>Theme: ' + (state.theme === 'dark' ? 'Dark' : 'Light') + '</button>';
+function fmtUpdated(iso) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
-function navHTML(opts) {
-  opts = opts || {};
-  const links = [];
-  if (opts.viewToggle === 'dashboard') links.push('<button type="button" class="nav-link-btn" data-view="dashboard">Dashboard</button>');
-  if (opts.viewToggle === 'overview') links.push('<button type="button" class="nav-link-btn active" data-view="landing">Overview</button>');
-  links.push('<a class="ext-link" href="https://huggingface.co/collections/RedHatAI/speculator-models" target="_blank" rel="noopener">Models</a>');
-  links.push('<a class="ext-link" href="https://github.com/vllm-project/speculators" target="_blank" rel="noopener">GitHub</a>');
-  links.push(themeBtnHTML());
-  const inner = '<a class="nav-brand" href="https://github.com/vllm-project/speculators" target="_blank" rel="noopener">' +
+function versionChips(m) {
+  let html = '';
+  if (m.vllm) html += ' <span class="hw-chip">vLLM ' + m.vllm + '</span>';
+  if (m.speculators) html += ' <span class="hw-chip">speculators ' + m.speculators + '</span>';
+  return html;
+}
+
+function algoColor(algo) {
+  return ALGO_COLORS[algo] || 'var(--text-3)';
+}
+
+function navHTML() {
+  return '<nav class="site-nav">' +
+    '<a class="nav-brand" href="https://github.com/vllm-project/speculators" target="_blank" rel="noopener">' +
     LOGO_SVG + 'vLLM <span class="nav-sub">/ Speculators</span></a>' +
-    '<div class="nav-links">' + links.join('') + '</div>';
-  if (opts.slim) return '<nav class="site-nav static"><div class="nav-inner">' + inner + '</div></nav>';
-  return '<nav class="site-nav">' + inner + '</nav>';
+    '<div class="nav-links">' +
+    '<a href="https://huggingface.co/collections/RedHatAI/speculator-models" target="_blank" rel="noopener">Models</a>' +
+    '<a href="https://github.com/vllm-project/speculators" target="_blank" rel="noopener">GitHub</a>' +
+    '<button type="button" class="theme-toggle" data-theme-toggle>Theme: ' + (state.theme === 'dark' ? 'Dark' : 'Light') + '</button>' +
+    '</div></nav>';
 }
 
-function heroHTML(compact, navOpts) {
-  return '<header class="hero' + (compact ? ' compact' : '') + '">' +
+function heroHTML() {
+  return '<header class="hero">' +
     '<div class="aurora" aria-hidden="true">' +
     '<div class="aurora-blob aurora-blob--deep"></div>' +
     '<div class="aurora-blob aurora-blob--blue"></div>' +
     '<div class="aurora-blob aurora-blob--bright"></div>' +
     '<div class="aurora-blob aurora-blob--gold"></div></div>' +
-    navHTML(navOpts || {}) +
+    navHTML() +
     '<div class="hero-content">' +
     '<div class="hero-eyebrow"><span class="dot"></span>Speculative Decoding Evals</div>' +
     '<h1 class="hero-title">Find the <span class="grad">fastest drafter</span><br>for your model.</h1>' +
@@ -932,7 +1907,7 @@ function heroHTML(compact, navOpts) {
     '<a href="https://huggingface.co/collections/RedHatAI/speculator-models" target="_blank" rel="noopener" class="btn btn-primary">Browse Models</a>' +
     '<a href="https://github.com/vllm-project/speculators" target="_blank" rel="noopener" class="btn btn-ghost">View on GitHub</a>' +
     '</div>' +
-    '<div class="hero-meta">Last updated: Sep 10, 2026</div>' +
+    '<div class="hero-meta">Last updated: ' + fmtUpdated(UPDATED_AT) + '</div>' +
     '</div></header>';
 }
 
@@ -976,16 +1951,13 @@ function howHTML() {
 }
 
 function statsHTML() {
-  let best = null, bestD = null;
-  DATA.forEach(function (d) {
-    const v = d.runs[0].throughput;
-    if (best === null || v > best) { best = v; bestD = d; }
-  });
+  const ok = DATA.filter(function (d) { return d.status === 'ok'; }).length;
+  const failed = DATA.length - ok;
   const algos = {};
   DATA.forEach(function (d) { algos[d.algorithm] = true; });
   return '<section class="stats-section fade-in-up"><div class="container"><div class="stats-row">' +
-    '<div class="stat"><div class="stat-val">' + DATA.length + '</div><div class="stat-label">Models Evaluated</div></div>' +
-    '<div class="stat"><div class="stat-val">' + Math.round(best).toLocaleString('en-US') + '</div><div class="stat-label">Best Throughput (tok/s)</div><div class="stat-sublabel">' + short(bestD.name) + '</div></div>' +
+    '<div class="stat"><div class="stat-val">' + ok + '</div><div class="stat-label">Models Evaluated</div><div class="stat-sublabel">' + DATA.length + ' tracked · ' + failed + ' failed</div></div>' +
+    '<div class="stat"><div class="stat-val">' + DATA.length + '</div><div class="stat-label">Eval Runs</div></div>' +
     '<div class="stat"><div class="stat-val">' + Object.keys(algos).length + '</div><div class="stat-label">Algorithms Compared</div></div>' +
     '</div></div></section>';
 }
@@ -997,199 +1969,301 @@ function footerHTML() {
     '</footer>';
 }
 
-function searchHTML() {
-  return '<div class="search" data-search>' +
-    '<input type="text" class="filter-input" placeholder="Search drafters" aria-label="Search drafters" autocomplete="off" spellcheck="false">' +
-    '<div class="search-drop" hidden></div></div>';
+const SORTS = {
+  model: function (d) { return d.model.toLowerCase(); },
+  acceptance: function (d) { return d.metrics ? d.metrics.acceptance_length : null; },
+  throughput: function (d) { return d.metrics ? d.metrics.throughput_tps : null; },
+  ttft: function (d) { return d.metrics ? d.metrics.ttft_ms : null; },
+  itl: function (d) { return d.metrics ? d.metrics.itl_ms : null; },
+  hardware: function (d) { return d.gpus || ''; }
+};
+
+function filteredData() {
+  const q = state.filters.text.trim().toLowerCase();
+  const out = DATA.filter(function (d) {
+    if (state.filters.target !== 'all' && short(d.target) !== state.filters.target) return false;
+    if (state.filters.algorithm !== 'all' && d.algorithm !== state.filters.algorithm) return false;
+    if (q) {
+      const hay = (d.model + ' ' + d.target + ' ' + d.algorithm).toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+  const f = SORTS[state.sort.key];
+  out.sort(function (a, b) {
+    const x = f(a), y = f(b);
+    if (x === null && y === null) return 0;
+    if (x === null) return 1;
+    if (y === null) return -1;
+    return (x < y ? -1 : x > y ? 1 : 0) * state.sort.dir;
+  });
+  return out;
+}
+
+function targetTabsHTML() {
+  const counts = {};
+  DATA.forEach(function (d) {
+    const fam = short(d.target);
+    counts[fam] = (counts[fam] || 0) + 1;
+  });
+  const fams = Object.keys(counts).sort();
+  let html = '<button type="button" class="target-tab' + (state.filters.target === 'all' ? ' active' : '') + '" data-target="all">All Targets <span class="tab-count">' + DATA.length + '</span></button>';
+  fams.forEach(function (fam) {
+    html += '<button type="button" class="target-tab' + (state.filters.target === fam ? ' active' : '') + '" data-target="' + fam + '">' + fam + ' <span class="tab-count">' + counts[fam] + '</span></button>';
+  });
+  return '<div class="target-tabs">' + html + '</div>';
+}
+
+function algoSelectHTML() {
+  const algos = [];
+  DATA.forEach(function (d) { if (algos.indexOf(d.algorithm) < 0) algos.push(d.algorithm); });
+  algos.sort();
+  let html = '<select class="filter-select" id="filter-algorithm" aria-label="Filter by algorithm">' +
+    '<option value="all">All Algorithms</option>';
+  algos.forEach(function (a) {
+    html += '<option value="' + a + '"' + (state.filters.algorithm === a ? ' selected' : '') + '>' + a + '</option>';
+  });
+  return html + '</select>';
+}
+
+function tableHTML() {
+  const rows = filteredData();
+  const cols = [
+    ['model', 'Drafter', ''], ['acceptance', 'Accept. Len', 'right'],
+    ['throughput', 'Throughput', 'right'], ['ttft', 'TTFT', 'right'],
+    ['itl', 'ITL', 'right'], ['hardware', 'Hardware', '']
+  ];
+  const head = cols.map(function (c) {
+    const arrow = state.sort.key === c[0] ? '<span class="sort-arrow">' + (state.sort.dir === 1 ? '▲' : '▼') + '</span>' : '';
+    return '<th class="' + c[2] + '" data-sort="' + c[0] + '">' + c[1] + arrow + '</th>';
+  }).join('');
+  if (rows.length === 0) {
+    return '<div class="table-shell"><table><thead><tr>' + head + '</tr></thead></table>' +
+      '<div class="placeholder">No models match the current filters.</div></div>';
+  }
+  const body = rows.map(function (d) {
+    const failed = d.status !== 'ok';
+    const badge = failed
+      ? '<span class="status-badge"' + (d.error ? ' title="' + d.error + '"' : '') + '>failed</span>'
+      : '<span class="algo-badge ' + algoClass(d.algorithm) + '">' + d.algorithm + '</span>';
+    let cells;
+    if (failed) {
+      cells = '<td class="right"><span class="metric-unit">n/a</span></td>'.repeat(4);
+    } else {
+      cells = '<td class="right"><span class="metric-val">' + d.metrics.acceptance_length.toFixed(2) + '</span></td>' +
+        '<td class="right"><span class="metric-val">' + METRICS.throughput.fmt(d.metrics.throughput_tps) + '</span><span class="metric-unit">tok/s</span></td>' +
+        '<td class="right"><span class="metric-val">' + d.metrics.ttft_ms.toFixed(1) + '</span><span class="metric-unit">ms</span></td>' +
+        '<td class="right"><span class="metric-val">' + d.metrics.itl_ms.toFixed(2) + '</span><span class="metric-unit">ms/tok</span></td>';
+    }
+    return '<tr class="model-row' + (failed ? ' failed-row' : '') + '">' +
+      '<td><div class="model-name"><span class="top-row">' +
+      '<a class="d-name" href="https://huggingface.co/' + d.model + '" target="_blank" rel="noopener noreferrer">' + short(d.model) + '</a>' + badge + '</span>' +
+      '<span class="model-target">' + short(d.target) + '</span></div></td>' +
+      cells +
+      '<td><span class="hw-chip">' + formatHardware(d.gpus) + '</span> <span class="hw-chip">' + d.evaluated_at.slice(0, 10) + '</span>' + versionChips(d) + '</td></tr>';
+  }).join('');
+  return '<div class="table-shell"><div class="table-scroll"><table>' +
+    '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div></div>';
+}
+
+function benchmarksHTML() {
+  return '<section class="benchmark-section fade-in-up"><div class="container">' +
+    '<div class="section-head">' +
+    '<div class="section-eyebrow">Benchmarks</div>' +
+    '<h2 class="section-title">The results.</h2></div>' +
+    '<div id="tabs-wrap">' + targetTabsHTML() + '</div>' +
+    '<div class="filters">' + algoSelectHTML() +
+    '<input type="search" class="filter-input" id="filter-text" placeholder="Search models..." aria-label="Search models" value="' + state.filters.text + '">' +
+    '</div>' +
+    '<div id="table-wrap">' + tableHTML() + '</div>' +
+    '</div></section>';
+}
+
+function legendHTML(algos) {
+  return '<div class="gchart-legend">' + algos.map(function (a) {
+    return '<span class="leg-item"><span class="leg-swatch" style="background:' + algoColor(a) + '"></span>' + a + '</span>';
+  }).join('') + '</div>';
+}
+
+function analysisChartHTML() {
+  const m = METRICS[state.metric];
+  const ok = DATA.filter(function (d) { return d.status === 'ok' && d.metrics; });
+  const byTarget = {};
+  const targets = [];
+  const algosPresent = [];
+  ok.forEach(function (d) {
+    const fam = short(d.target);
+    if (!byTarget[fam]) { byTarget[fam] = {}; targets.push(fam); }
+    const v = d.metrics[m.field];
+    if (v === null || v === undefined) return;
+    const cur = byTarget[fam][d.algorithm];
+    if (!cur || (m.better === 'min' ? v < cur.v : v > cur.v)) {
+      byTarget[fam][d.algorithm] = { v: v, d: d };
+    }
+    if (algosPresent.indexOf(d.algorithm) < 0) algosPresent.push(d.algorithm);
+  });
+  targets.sort();
+  let max = 0;
+  targets.forEach(function (t) {
+    Object.keys(byTarget[t]).forEach(function (a) { if (byTarget[t][a].v > max) max = byTarget[t][a].v; });
+  });
+  const groups = targets.map(function (t) {
+    const bars = algosPresent.filter(function (a) { return byTarget[t][a]; }).map(function (a) {
+      const cell = byTarget[t][a];
+      const h = Math.max(3, Math.round((cell.v / max) * 100));
+      return '<div class="gbar-wrap"><span class="gbar-val">' + m.fmt(cell.v) + '</span>' +
+        '<div class="gbar" style="height:' + h + '%;background:' + algoColor(a) + '" title="' + short(cell.d.model) + ': ' + m.fmt(cell.v) + ' ' + m.unit + '"></div></div>';
+    }).join('');
+    return '<div class="ggroup"><div class="ggroup-bars">' + bars + '</div><div class="ggroup-label">' + t + '</div></div>';
+  }).join('');
+  return '<div class="gchart-groups">' + groups + '</div>' + legendHTML(algosPresent);
+}
+
+function analysisHTML() {
+  const m = METRICS[state.metric];
+  const tabs = Object.keys(METRICS).map(function (k) {
+    return '<button type="button" class="target-tab' + (state.metric === k ? ' active' : '') + '" data-metric="' + k + '">' + METRICS[k].label + '</button>';
+  }).join('');
+  return '<section class="chart-section fade-in-up"><div class="container">' +
+    '<div class="section-head">' +
+    '<div class="section-eyebrow">Analysis</div>' +
+    '<h2 class="section-title">Algorithm Comparison</h2>' +
+    '<p class="section-desc">Best ' + m.label.toLowerCase() + ' (' + m.unit + ') per algorithm on each target model</p></div>' +
+    '<div class="target-tabs metric-tabs">' + tabs + '</div>' +
+    '<div class="chart-shell">' + analysisChartHTML() + '</div>' +
+    '</div></section>';
+}
+
+function sourceChartHTML(sourceKey) {
+  const src = SOURCES[sourceKey];
+  if (src.empty) return '<div class="placeholder">' + src.empty + '</div>';
+  const m = METRICS[state.metric];
+  const ok = DATA.filter(function (d) { return d.status === 'ok' && d.subsets; });
+  const subsets = ok.length ? Object.keys(ok[0].subsets) : [];
+  let max = 0;
+  ok.forEach(function (d) {
+    subsets.forEach(function (s) {
+      const v = d.subsets[s][m.field];
+      if (v !== null && v !== undefined && v > max) max = v;
+    });
+  });
+  const algosPresent = [];
+  const groups = subsets.map(function (subset) {
+    const bars = ok.filter(function (d) {
+      return d.subsets[subset][m.field] !== null && d.subsets[subset][m.field] !== undefined;
+    }).map(function (d) {
+      if (algosPresent.indexOf(d.algorithm) < 0) algosPresent.push(d.algorithm);
+      const v = d.subsets[subset][m.field];
+      const h = Math.max(2, Math.round((v / max) * 100));
+      return '<div class="gbar-wrap">' +
+        '<div class="gbar" style="height:' + h + '%;background:' + algoColor(d.algorithm) + '" title="' + short(d.model) + ' · ' + subset + ': ' + m.fmt(v) + ' ' + m.unit + '"></div></div>';
+    }).join('');
+    return '<div class="ggroup"><div class="ggroup-bars">' + bars + '</div><div class="ggroup-label">' + subset + '</div></div>';
+  }).join('');
+  return '<div class="gchart-groups dense">' + groups + '</div>' + legendHTML(algosPresent);
 }
 
 function metricTabsHTML() {
-  return '<div class="detail-tabs">' + Object.keys(METRICS).map(function (k) {
-    return '<button type="button" class="detail-tab' + (state.metric === k ? ' active' : '') + '" data-metric="' + k + '">' + METRICS[k].label + '</button>';
+  return '<div class="target-tabs metric-tabs">' + Object.keys(METRICS).map(function (k) {
+    return '<button type="button" class="target-tab' + (state.metric === k ? ' active' : '') + '" data-metric="' + k + '">' + METRICS[k].label + '</button>';
   }).join('') + '</div>';
 }
 
-function barsHTML(d) {
-  const m = METRICS[state.metric];
-  const max = Math.max.apply(null, d.runs.map(function (r) { return m.raw(r); }));
-  const cols = d.runs.map(function (r) {
-    const v = m.raw(r);
-    const h = Math.max(3, Math.round((v / max) * 100));
-    return '<div class="bar-col">' +
-      '<div class="bar-val">' + m.fmt(v) + '</div>' +
-      '<div class="bar-track"><div class="bar-fill" style="height:' + h + '%"></div></div>' +
-      '<div class="bar-label">' + r.date.slice(5) + ' · ' + r.hardware + '</div></div>';
+function suitesHTML() {
+  if (state.variant === 'a') {
+    const tabs = Object.keys(SOURCES).map(function (k) {
+      return '<button type="button" class="target-tab' + (state.source === k ? ' active' : '') + '" data-source="' + k + '">' + SOURCES[k].label + '</button>';
+    }).join('');
+    return '<section class="chart-section fade-in-up"><div class="container">' +
+      '<div class="section-head">' +
+      '<div class="section-eyebrow">Benchmark Suites</div>' +
+      '<h2 class="section-title">Suite Comparison</h2>' +
+      '<p class="section-desc">' + SOURCES[state.source].desc + '</p></div>' +
+      '<div class="target-tabs metric-tabs">' + tabs + '</div>' +
+      (SOURCES[state.source].empty ? '' : metricTabsHTML()) +
+      '<div class="chart-shell">' + sourceChartHTML(state.source) + '</div>' +
+      '</div></section>';
+  }
+  return Object.keys(SOURCES).map(function (k) {
+    return '<section class="chart-section fade-in-up"><div class="container">' +
+      '<div class="section-head">' +
+      '<div class="section-eyebrow">Benchmark Suites</div>' +
+      '<h2 class="section-title">' + SOURCES[k].label + '</h2>' +
+      '<p class="section-desc">' + SOURCES[k].desc + '</p></div>' +
+      (SOURCES[k].empty ? '' : metricTabsHTML()) +
+      '<div class="chart-shell">' + sourceChartHTML(k) + '</div>' +
+      '</div></section>';
   }).join('');
-  return '<div class="bars">' + cols + '</div>';
 }
 
-function runsHTML(d) {
-  return '<div class="runs">' + d.runs.map(function (r) {
-    return '<div class="run-row">' +
-      '<span class="hw-chip">' + r.date + '</span>' +
-      '<span class="hw-chip">' + r.hardware + '</span>' +
-      '<span class="hw-chip">vLLM ' + r.vllm + '</span>' +
-      '<span class="hw-chip">speculators ' + r.speculators + '</span></div>';
-  }).join('') + '</div>';
-}
-
-function sbHTML(d) {
-  if (!d.speedBench || d.speedBench.length === 0) return '';
-  const rows = d.speedBench.map(function (s) {
-    return '<tr><td class="subset-name">' + s.subset + '</td>' +
-      '<td class="num">' + s.score.toFixed(1) + '</td>' +
-      '<td class="num">' + Math.round(s.tokensPerSec).toLocaleString('en-US') + '<span class="unit">tok/s</span></td></tr>';
-  }).join('');
-  return '<div class="sb"><div class="section-eyebrow">SPEED-Bench</div>' +
-    '<div class="table-shell"><table class="subset-tbl">' +
-    '<thead><tr><th>Subset</th><th class="num">Score</th><th class="num">Tokens/s</th></tr></thead>' +
-    '<tbody>' + rows + '</tbody></table></div></div>';
-}
-
-function pickedHTML(d) {
-  return '<div class="picked" data-anchor="' + d.id + '">' +
-    '<span class="picked-name">' + short(d.name) + '</span>' +
-    '<span class="algo-badge ' + algoClass(d.algorithm) + '">' + d.algorithm + '</span>' +
-    '<span class="picked-target">Target: ' + d.target + '</span></div>';
-}
-
-function leaderboardHTML() {
-  const rows = DATA.map(function (d) {
-    const r = d.runs[0];
-    return '<tr class="model-row' + (state.selected === d.id ? ' expanded' : '') + '" data-anchor="' + d.id + '" data-select="' + d.id + '">' +
-      '<td><div class="model-name"><span class="top-row"><span class="d-name">' + short(d.name) + '</span>' +
-      '<span class="algo-badge ' + algoClass(d.algorithm) + '">' + d.algorithm + '</span></span>' +
-      '<span class="model-target">' + short(d.target) + '</span></div></td>' +
-      '<td class="right"><span class="metric-val">' + METRICS.acceptance.fmt(r.acceptance) + '</span></td>' +
-      '<td class="right"><span class="metric-val">' + METRICS.throughput.fmt(r.throughput) + '</span><span class="metric-unit">tok/s</span></td>' +
-      '<td class="right"><span class="metric-val">' + METRICS.latency.fmt(r.latency) + '</span><span class="metric-unit">ms/tok</span></td>' +
-      '<td><span class="hw-chip">' + r.hardware + '</span></td></tr>';
-  }).join('');
-  return '<div class="table-shell"><div class="table-scroll"><table>' +
-    '<thead><tr><th>Drafter</th><th class="right">Acceptance</th><th class="right">Throughput</th><th class="right">Latency</th><th>Hardware</th></tr></thead>' +
-    '<tbody>' + rows + '</tbody></table></div></div>';
-}
-
-function dashHTML(opts) {
-  const d = selectedDrafter();
-  let html = '<div class="section-head">' +
-    '<div class="section-eyebrow">Benchmarks</div>' +
-    '<h2 class="section-title">The results.</h2>' +
-    '<p class="section-desc">Search for a drafter to inspect its eval runs, or pick one from the list.</p></div>' +
-    '<div class="filters">' + searchHTML() + '</div>';
-  if (opts.leaderboard) html += leaderboardHTML();
-  html += pickedHTML(d) + metricTabsHTML() +
-    '<div class="chart-shell">' + barsHTML(d) + '</div>' +
-    runsHTML(d) + sbHTML(d);
-  return html;
-}
-
-function viewA() {
-  return heroHTML(false, {}) +
+function pageHTML() {
+  return heroHTML() +
     '<main>' +
     howHTML() +
     statsHTML() +
-    '<section class="dash-section fade-in-up"><div class="container">' + dashHTML({}) + '</div></section>' +
+    benchmarksHTML() +
+    analysisHTML() +
+    suitesHTML() +
     '</main>' + footerHTML();
 }
 
-function viewB() {
-  return heroHTML(true, {}) +
-    '<main>' +
-    '<section class="dash-section fade-in-up" style="padding-top:2rem"><div class="container">' + dashHTML({ leaderboard: true }) + '</div></section>' +
-    howHTML() +
-    '</main>' + footerHTML();
+function refreshTable() {
+  document.getElementById('tabs-wrap').innerHTML = targetTabsHTML();
+  document.getElementById('table-wrap').innerHTML = tableHTML();
+  bindTableControls();
 }
 
-function viewC() {
-  if (state.cView === 'dashboard') {
-    return navHTML({ slim: true, viewToggle: 'overview' }) +
-      '<main><section class="dash-section"><div class="container">' + dashHTML({}) + '</div></section></main>' +
-      footerHTML();
-  }
-  return heroHTML(false, { viewToggle: 'dashboard' }) +
-    '<main>' + howHTML() + statsHTML() + '</main>' + footerHTML();
+function bindTableControls() {
+  document.querySelectorAll('#tabs-wrap [data-target]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.filters.target = b.dataset.target;
+      refreshTable();
+    });
+  });
+  document.querySelectorAll('#table-wrap [data-sort]').forEach(function (th) {
+    th.addEventListener('click', function () {
+      const key = th.dataset.sort;
+      if (state.sort.key === key) { state.sort.dir = -state.sort.dir; }
+      else { state.sort.key = key; state.sort.dir = key === 'model' || key === 'hardware' ? 1 : -1; }
+      refreshTable();
+    });
+  });
 }
 
-function render() {
-  document.documentElement.dataset.theme = state.theme;
-  const app = document.getElementById('app');
-  app.innerHTML = state.variant === 'a' ? viewA() : state.variant === 'b' ? viewB() : viewC();
-  document.getElementById('sw-label').textContent = VARIANT_LABELS[state.variant];
-  bind(app);
-  setupAnimations();
-}
-
-function bind(app) {
-  app.querySelectorAll('[data-theme-toggle]').forEach(function (b) {
+function bind() {
+  document.querySelectorAll('[data-theme-toggle]').forEach(function (b) {
     b.addEventListener('click', function () {
       state.theme = state.theme === 'dark' ? 'light' : 'dark';
       render();
     });
   });
-  app.querySelectorAll('[data-metric]').forEach(function (b) {
+  document.querySelectorAll('[data-metric]').forEach(function (b) {
     b.addEventListener('click', function () {
       state.metric = b.dataset.metric;
       render();
     });
   });
-  app.querySelectorAll('[data-select]').forEach(function (el) {
-    el.addEventListener('click', function () {
-      state.selected = el.dataset.select;
-      render();
-    });
-  });
-  app.querySelectorAll('[data-view]').forEach(function (b) {
+  document.querySelectorAll('[data-source]').forEach(function (b) {
     b.addEventListener('click', function () {
-      state.cView = b.dataset.view;
+      state.source = b.dataset.source;
       render();
-      window.scrollTo(0, 0);
     });
   });
-  app.querySelectorAll('[data-search]').forEach(function (wrap) {
-    const input = wrap.querySelector('input');
-    const drop = wrap.querySelector('.search-drop');
-    input.value = state.query;
-    input.addEventListener('input', function () {
-      state.query = input.value;
-      const q = input.value.trim().toLowerCase();
-      if (!q) { drop.hidden = true; drop.innerHTML = ''; return; }
-      const matches = DATA.filter(function (d) { return d.name.toLowerCase().indexOf(q) >= 0; });
-      drop.innerHTML = matches.length
-        ? matches.map(function (d) {
-            return '<button type="button" class="search-item" data-pick="' + d.id + '">' +
-              '<span class="si-name">' + short(d.name) + '</span>' +
-              '<span class="si-meta">' + short(d.target) + ' · ' + d.algorithm + '</span></button>';
-          }).join('')
-        : '<div class="search-empty">No matching drafters</div>';
-      drop.hidden = false;
-    });
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') { drop.hidden = true; input.blur(); }
-    });
-    drop.addEventListener('click', function (e) {
-      const item = e.target.closest('[data-pick]');
-      if (item) { drop.hidden = true; selectDrafter(item.dataset.pick, true); }
-    });
-  });
-}
-
-function selectDrafter(id, scroll) {
-  const d = DATA.find(function (x) { return x.id === id; });
-  if (!d) return;
-  state.selected = id;
-  state.query = short(d.name);
-  render();
-  if (scroll) {
-    requestAnimationFrame(function () {
-      const el = document.querySelector('[data-anchor="' + id + '"]');
-      if (el) {
-        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        el.classList.add('flash');
-        setTimeout(function () { el.classList.remove('flash'); }, 1200);
-      }
+  const algoSel = document.getElementById('filter-algorithm');
+  if (algoSel) {
+    algoSel.addEventListener('change', function () {
+      state.filters.algorithm = algoSel.value;
+      refreshTable();
     });
   }
+  const textInput = document.getElementById('filter-text');
+  if (textInput) {
+    textInput.addEventListener('input', function () {
+      state.filters.text = textInput.value;
+      refreshTable();
+    });
+  }
+  bindTableControls();
 }
 
 function setupAnimations() {
@@ -1201,9 +2275,16 @@ function setupAnimations() {
   document.querySelectorAll('.fade-in-up').forEach(function (el) { observer.observe(el); });
 }
 
+function render() {
+  document.documentElement.dataset.theme = state.theme;
+  document.getElementById('app').innerHTML = pageHTML();
+  document.getElementById('sw-label').textContent = VARIANT_LABELS[state.variant];
+  bind();
+  setupAnimations();
+}
+
 function setVariant(v) {
   state.variant = v;
-  state.cView = 'landing';
   history.replaceState(null, '', '?variant=' + v);
   render();
   window.scrollTo(0, 0);
@@ -1215,22 +2296,14 @@ function cycle(dir) {
   setVariant(VARIANTS[next]);
 }
 
-function closeAllDrops() {
-  document.querySelectorAll('.search-drop').forEach(function (d) { d.hidden = true; });
-}
-
 document.getElementById('sw-prev').addEventListener('click', function () { cycle(-1); });
 document.getElementById('sw-next').addEventListener('click', function () { cycle(1); });
 
 document.addEventListener('keydown', function (e) {
   const t = e.target;
-  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
   if (e.key === 'ArrowLeft') cycle(-1);
   else if (e.key === 'ArrowRight') cycle(1);
-});
-
-document.addEventListener('click', function (e) {
-  if (!e.target.closest('[data-search]')) closeAllDrops();
 });
 
 render();
