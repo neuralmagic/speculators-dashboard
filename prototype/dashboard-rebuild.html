@@ -1,0 +1,708 @@
+<!-- PROTOTYPE: throwaway design exploration for issue #140. Question: what should the rebuilt dashboard look and feel like? Three variants switchable via ?variant=a|b|c. -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Speculators</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --sans: 'Inter', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+html[data-theme="dark"] {
+  --bg: #020617; --surface: #0f172a; --surface-2: #16213a; --panel: #0b1226;
+  --text-1: #f8fafc; --text-2: #94a3b8; --text-3: #64748b;
+  --border: rgba(148, 163, 184, 0.16);
+  --accent: #30a2ff; --on-accent: #04182b;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+html[data-theme="light"] {
+  --bg: #f1f5f9; --surface: #ffffff; --surface-2: #f1f5f9; --panel: #ffffff;
+  --text-1: #0f172a; --text-2: #475569; --text-3: #94a3b8;
+  --border: rgba(15, 23, 42, 0.12);
+  --accent: #0369a1; --on-accent: #ffffff;
+  --shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans); background: var(--bg); color: var(--text-1);
+  line-height: 1.5; padding-bottom: 6rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+input { font: inherit; }
+.mono { font-family: var(--mono); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.chip {
+  font-family: var(--mono); font-size: 0.6875rem; padding: 0.15rem 0.45rem;
+  border: 1px solid var(--border); border-radius: 0.375rem;
+  color: var(--text-2); background: var(--surface); white-space: nowrap;
+}
+.chip-algo { color: var(--accent); }
+
+.tbtn {
+  font-family: var(--mono); font-size: 0.6875rem; padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border); border-radius: 0.5rem;
+  color: var(--text-2); background: var(--surface); white-space: nowrap;
+}
+.tbtn:hover { color: var(--text-1); }
+
+.brand h1 { font-size: 1.125rem; font-weight: 700; letter-spacing: -0.02em; }
+.brand p { font-size: 0.8125rem; color: var(--text-2); margin-top: 0.125rem; }
+
+.seg {
+  display: inline-flex; border: 1px solid var(--border); border-radius: 0.5rem;
+  overflow: hidden; background: var(--surface);
+}
+.seg-btn {
+  padding: 0.375rem 0.75rem; font-size: 0.75rem; font-family: var(--mono);
+  color: var(--text-2); border-right: 1px solid var(--border); white-space: nowrap;
+}
+.seg-btn:last-child { border-right: 0; }
+.seg-btn:hover { color: var(--text-1); }
+.seg-btn.on { background: var(--accent); color: var(--on-accent); }
+
+.search { position: relative; }
+.search input {
+  width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border);
+  border-radius: 0.5rem; background: var(--surface); color: var(--text-1);
+  font-size: 0.875rem;
+}
+.search input::placeholder { color: var(--text-3); }
+.search input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.search-drop {
+  position: absolute; top: calc(100% + 0.375rem); left: 0; right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 0.625rem; box-shadow: var(--shadow); z-index: 60;
+  max-height: 18rem; overflow: auto; padding: 0.25rem; text-align: left;
+}
+.search-item {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.125rem;
+  width: 100%; text-align: left; padding: 0.5rem 0.625rem; border-radius: 0.375rem;
+}
+.search-item:hover { background: var(--surface-2); }
+.si-name { font-family: var(--mono); font-size: 0.75rem; color: var(--text-1); }
+.si-meta { font-size: 0.6875rem; color: var(--text-3); }
+.search-empty { padding: 0.625rem; font-size: 0.75rem; color: var(--text-3); }
+
+.chart { width: 100%; }
+.chart-bars { display: flex; align-items: flex-end; gap: 1rem; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.375rem; min-width: 0; }
+.bar-val { font-family: var(--mono); font-size: 0.75rem; color: var(--text-1); white-space: nowrap; }
+.bar-track {
+  width: 100%; max-width: 7rem; height: var(--bar-h);
+  display: flex; align-items: flex-end;
+  background: var(--surface-2); border-radius: 0.375rem; overflow: hidden;
+}
+.bar-fill { width: 100%; background: var(--accent); border-radius: 0.375rem 0.375rem 0 0; }
+.bar-label { font-family: var(--mono); font-size: 0.6875rem; color: var(--text-3); white-space: nowrap; }
+.chart-lg { --bar-h: 240px; }
+.chart-md { --bar-h: 150px; }
+.chart-sm { --bar-h: 72px; }
+.chart-sm .bar-val { font-size: 0.6875rem; }
+.chart-sm .bar-label { font-size: 0.625rem; }
+
+.sb { margin-top: 1.25rem; border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; background: var(--surface); }
+.sb-head {
+  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--accent);
+  padding: 0.625rem 1rem; border-bottom: 1px solid var(--border); background: var(--surface-2);
+}
+.sb-row {
+  display: flex; gap: 1rem; align-items: baseline;
+  padding: 0.5rem 1rem; border-top: 1px solid var(--border);
+}
+.sb-row:first-of-type { border-top: 0; }
+.sb-cols { font-family: var(--mono); font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3); }
+.sb-name { font-family: var(--mono); font-size: 0.75rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sb-score { font-family: var(--mono); font-size: 0.75rem; color: var(--text-1); width: 4.5rem; text-align: right; }
+.sb-toks { font-family: var(--mono); font-size: 0.75rem; color: var(--text-2); width: 7.5rem; text-align: right; }
+.sb-cols span:nth-child(2) { width: 4.5rem; text-align: right; }
+.sb-cols span:nth-child(3) { width: 7.5rem; text-align: right; }
+.sb-cols span:first-child { flex: 1; }
+
+@keyframes flash {
+  0% { outline: 2px solid var(--accent); outline-offset: -2px; }
+  100% { outline: 2px solid transparent; outline-offset: -2px; }
+}
+.flash { animation: flash 1.2s ease-out; }
+
+.switcher {
+  position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 0.25rem;
+  background: #0b0f19; border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc; border-radius: 999px; padding: 0.375rem 0.5rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45); z-index: 100;
+  font-family: var(--mono);
+}
+.switcher button {
+  width: 1.75rem; height: 1.75rem; border-radius: 999px;
+  font-size: 0.8125rem; color: #cbd5e1; display: grid; place-items: center;
+}
+.switcher button:hover { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
+.switcher-label { font-size: 0.75rem; min-width: 8.75rem; text-align: center; letter-spacing: 0.04em; }
+
+.topbar {
+  max-width: 80rem; margin: 0 auto; padding: 1.5rem 1.5rem 0;
+  display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+}
+.topbar .search { margin-left: auto; width: 17rem; }
+.page-a { max-width: 80rem; margin: 1.25rem auto 0; padding: 0 1.5rem; }
+.panel { border: 1px solid var(--border); border-radius: 0.75rem; background: var(--panel); overflow: hidden; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.tbl th {
+  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-3); text-align: left;
+  padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--border);
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+.tbl th:hover { color: var(--text-1); }
+.tbl th .sort-ind { color: var(--accent); margin-left: 0.25rem; }
+.tbl td { padding: 0.5625rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.tbl tbody tr:last-child td { border-bottom: 0; }
+.t-row { cursor: pointer; }
+.t-row:hover td { background: var(--surface-2); }
+.t-row.open td { background: var(--surface-2); }
+.num, th.num { text-align: right; }
+.c-name { font-family: var(--mono); font-size: 0.75rem; }
+.c-sub { color: var(--text-2); font-size: 0.75rem; }
+.c-hw { font-family: var(--mono); font-size: 0.6875rem; color: var(--text-2); }
+.drawer td { padding: 0; }
+.drawer-in { padding: 1.25rem 1.5rem 1.5rem; border-left: 2px solid var(--accent); background: var(--surface); }
+.drawer-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.drawer-title { font-size: 0.75rem; color: var(--text-2); }
+.run-chips { margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.run-chip-row { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+
+.wb { display: flex; min-height: 100vh; align-items: stretch; }
+.rail {
+  width: 19rem; flex-shrink: 0; border-right: 1px solid var(--border);
+  background: var(--surface); display: flex; flex-direction: column;
+  max-height: 100vh; position: sticky; top: 0;
+}
+.rail-head { padding: 1.25rem 1rem 0.75rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.rail-search { padding: 0 1rem 0.75rem; }
+.rail-list { overflow-y: auto; flex: 1; padding-bottom: 2rem; }
+.wb-group-t {
+  font-family: var(--mono); font-size: 0.6875rem; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--text-3); padding: 1rem 1rem 0.375rem;
+}
+.li {
+  display: block; width: 100%; text-align: left; padding: 0.5rem 1rem;
+  border-left: 2px solid transparent;
+}
+.li:hover { background: var(--surface-2); }
+.li.on { background: var(--surface-2); border-left-color: var(--accent); }
+.li-name { display: block; font-family: var(--mono); font-size: 0.75rem; color: var(--text-1); }
+.li-meta { display: block; font-size: 0.6875rem; color: var(--text-3); margin-top: 0.125rem; }
+.detail { flex: 1; min-width: 0; padding: 2rem 2.5rem; }
+.detail-in { max-width: 56rem; }
+.detail h2 { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.02em; font-family: var(--mono); }
+.detail-sub { color: var(--text-2); font-size: 0.875rem; margin-top: 0.375rem; }
+.detail-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1.5rem 0 1.25rem; }
+.runs-label {
+  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-3); margin-top: 2rem;
+}
+.run-card { border: 1px solid var(--border); border-radius: 0.75rem; background: var(--surface); padding: 1rem 1.25rem; margin-top: 0.75rem; }
+.run-date { font-family: var(--mono); font-size: 0.8125rem; color: var(--text-1); }
+.run-stats { display: flex; gap: 2.5rem; margin: 0.625rem 0 0.75rem; flex-wrap: wrap; }
+.stat-l { font-size: 0.6875rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+.stat-v { font-family: var(--mono); font-size: 1.0625rem; color: var(--text-1); margin-top: 0.125rem; }
+.run-card .chips { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+
+.band {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 3rem 1.5rem 2.5rem; text-align: center; position: relative;
+}
+.band .tbtn { position: absolute; top: 1.25rem; right: 1.5rem; }
+.band h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; }
+.band .sub { color: var(--text-2); margin-top: 0.5rem; font-size: 0.9375rem; }
+.band .search { width: min(34rem, 100%); margin: 1.75rem auto 0; }
+.band .search input { padding: 0.75rem 1rem; font-size: 1rem; }
+.band .seg-row { margin-top: 1.25rem; display: flex; justify-content: center; }
+.grid-wrap { max-width: 76rem; margin: 0 auto; padding: 2rem 1.5rem; }
+.grid-label {
+  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-3); margin-bottom: 1rem;
+}
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 1.25rem; }
+.card {
+  border: 1px solid var(--border); border-radius: 1rem; background: var(--surface);
+  padding: 1.25rem; text-align: left; display: block; width: 100%;
+}
+.card:hover { border-color: var(--text-3); }
+.card.sel { border-color: var(--accent); }
+.card h3 { font-family: var(--mono); font-size: 0.875rem; font-weight: 700; }
+.card-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-2); flex-wrap: wrap; }
+.card .chart { margin-top: 1rem; }
+.card-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.875rem; }
+.sb-section { max-width: 76rem; margin: 0 auto; padding: 0 1.5rem 2rem; }
+.sb-section h2 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+.sb-section .sb-desc { color: var(--text-2); font-size: 0.875rem; margin-top: 0.25rem; }
+.sb-entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr)); gap: 1.25rem; margin-top: 1.25rem; }
+.sb-dname { font-family: var(--mono); font-size: 0.75rem; color: var(--text-2); margin-bottom: 0.5rem; }
+.sb-entries .sb { margin-top: 0; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <nav class="switcher" aria-label="Prototype variant switcher">
+    <button type="button" id="sw-prev" aria-label="Previous variant">&lt;</button>
+    <span id="sw-label" class="switcher-label">A - Ledger</span>
+    <button type="button" id="sw-next" aria-label="Next variant">&gt;</button>
+  </nav>
+
+  <script>
+const DATA = [
+  {
+    id: 'llama8b-eagle3',
+    name: 'RedHatAI/Llama-3.1-8B-Instruct-speculator.eagle3',
+    target: 'meta-llama/Llama-3.1-8B-Instruct',
+    algorithm: 'eagle3',
+    runs: [
+      { hardware: '1xH100', date: '2026-08-06', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.723, throughput: 4074.7, latency: 3.38 },
+      { hardware: '2xA100-80G', date: '2026-07-22', vllm: '0.10.0', speculators: '0.3.0', acceptance: 0.701, throughput: 2981.2, latency: 4.12 },
+      { hardware: '1xH100', date: '2026-06-30', vllm: '0.9.4', speculators: '0.2.8', acceptance: 0.688, throughput: 3902.4, latency: 3.51 }
+    ],
+    speedBench: [
+      { subset: 'humaneval', score: 81.7, tokensPerSec: 5634.3 },
+      { subset: 'math_reasoning', score: 64.2, tokensPerSec: 3662.1 },
+      { subset: 'summarization', score: 48.9, tokensPerSec: 3011.5 }
+    ]
+  },
+  {
+    id: 'llama8b-mtp',
+    name: 'nvidia/Llama-3.1-8B-Instruct-speculator.mtp',
+    target: 'meta-llama/Llama-3.1-8B-Instruct',
+    algorithm: 'mtp',
+    runs: [
+      { hardware: '1xH100', date: '2026-08-14', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.654, throughput: 3521.8, latency: 3.92 }
+    ],
+    speedBench: []
+  },
+  {
+    id: 'qwen3-8b-dflash',
+    name: 'RedHatAI/Qwen3-8B-speculator.dflash',
+    target: 'Qwen/Qwen3-8B',
+    algorithm: 'dflash',
+    runs: [
+      { hardware: '1xH100', date: '2026-08-19', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.745, throughput: 5120.6, latency: 2.71 },
+      { hardware: '1xL40S', date: '2026-07-05', vllm: '0.10.1', speculators: '0.3.0', acceptance: 0.732, throughput: 3864.1, latency: 3.44 }
+    ],
+    speedBench: []
+  },
+  {
+    id: 'qwen3-14b-eagle3',
+    name: 'RedHatAI/Qwen3-14B-speculator.eagle3',
+    target: 'Qwen/Qwen3-14B',
+    algorithm: 'eagle3',
+    runs: [
+      { hardware: '2xA100-80G', date: '2026-08-11', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.698, throughput: 2648.9, latency: 5.37 }
+    ],
+    speedBench: []
+  },
+  {
+    id: 'qwen3-14b-dspark',
+    name: 'RedHatAI/Qwen3-14B-speculator.dspark',
+    target: 'Qwen/Qwen3-14B',
+    algorithm: 'dspark',
+    runs: [
+      { hardware: '2xA100-80G', date: '2026-09-02', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.717, throughput: 2812.3, latency: 5.04 }
+    ],
+    speedBench: []
+  },
+  {
+    id: 'qwen3-32b-dflash',
+    name: 'RedHatAI/Qwen3-32B-speculator.dflash',
+    target: 'Qwen/Qwen3-32B',
+    algorithm: 'dflash',
+    runs: [
+      { hardware: '2xH100', date: '2026-08-27', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.709, throughput: 1712.5, latency: 9.86 },
+      { hardware: '4xA100-80G', date: '2026-07-15', vllm: '0.10.0', speculators: '0.3.0', acceptance: 0.694, throughput: 1398.2, latency: 11.42 }
+    ],
+    speedBench: []
+  },
+  {
+    id: 'gptoss20b-eagle3',
+    name: 'zai-org/gpt-oss-20b-speculator.eagle3',
+    target: 'openai/gpt-oss-20b',
+    algorithm: 'eagle3',
+    runs: [
+      { hardware: '1xH100', date: '2026-08-30', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.682, throughput: 2241.7, latency: 6.18 }
+    ],
+    speedBench: []
+  },
+  {
+    id: 'gptoss20b-dflash',
+    name: 'RedHatAI/gpt-oss-20b-speculator.dflash',
+    target: 'openai/gpt-oss-20b',
+    algorithm: 'dflash',
+    runs: [
+      { hardware: '1xH100', date: '2026-09-08', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.726, throughput: 2518.4, latency: 5.62 },
+      { hardware: '1xL40S', date: '2026-08-02', vllm: '0.10.1', speculators: '0.3.0', acceptance: 0.711, throughput: 1904.6, latency: 7.05 }
+    ],
+    speedBench: []
+  },
+  {
+    id: 'gemma4-31b-peagle',
+    name: 'RedHatAI/gemma-4-31B-it-speculator.peagle',
+    target: 'google/gemma-4-31B-it',
+    algorithm: 'peagle',
+    runs: [
+      { hardware: '2xH100', date: '2026-09-05', vllm: '0.10.2', speculators: '0.3.1', acceptance: 0.691, throughput: 1488.3, latency: 10.74 },
+      { hardware: '4xA100-80G', date: '2026-07-28', vllm: '0.10.1', speculators: '0.3.0', acceptance: 0.668, throughput: 1206.9, latency: 12.93 }
+    ],
+    speedBench: [
+      { subset: 'humaneval', score: 72.4, tokensPerSec: 2108.6 },
+      { subset: 'qa', score: 55.8, tokensPerSec: 1632.4 }
+    ]
+  }
+];
+
+const METRICS = {
+  acceptance: { label: 'Acceptance (%)', fmt: function (v) { return (v * 100).toFixed(1) + '%'; }, raw: function (r) { return r.acceptance; } },
+  throughput: { label: 'Throughput (tok/s)', fmt: function (v) { return Math.round(v).toLocaleString('en-US'); }, raw: function (r) { return r.throughput; } },
+  latency: { label: 'Latency (ms/tok)', fmt: function (v) { return v.toFixed(2); }, raw: function (r) { return r.latency; } }
+};
+
+const VARIANTS = ['a', 'b', 'c'];
+const VARIANT_LABELS = { a: 'A - Ledger', b: 'B - Workbench', c: 'C - Catalog' };
+
+const state = {
+  variant: readVariant(),
+  theme: 'dark',
+  metric: 'acceptance',
+  selected: DATA[0].id,
+  expanded: null,
+  query: '',
+  sort: { key: 'drafter', dir: 1 }
+};
+
+function readVariant() {
+  const v = new URLSearchParams(location.search).get('variant');
+  return VARIANTS.indexOf(v) >= 0 ? v : 'a';
+}
+
+function short(name) {
+  const parts = name.split('/');
+  return parts[parts.length - 1];
+}
+
+function chips(r) {
+  return '<span class="chip">' + r.hardware + '</span>' +
+    '<span class="chip">vLLM ' + r.vllm + '</span>' +
+    '<span class="chip">speculators ' + r.speculators + '</span>' +
+    '<span class="chip">' + r.date + '</span>';
+}
+
+function seg() {
+  return '<div class="seg" role="group" aria-label="Chart metric">' +
+    Object.keys(METRICS).map(function (k) {
+      return '<button type="button" class="seg-btn' + (state.metric === k ? ' on' : '') + '" data-metric="' + k + '">' + METRICS[k].label + '</button>';
+    }).join('') + '</div>';
+}
+
+function bars(runs, metricKey, size) {
+  const m = METRICS[metricKey];
+  const max = Math.max.apply(null, runs.map(function (r) { return m.raw(r); }));
+  const cols = runs.map(function (r) {
+    const v = m.raw(r);
+    const h = Math.max(6, Math.round((v / max) * 100));
+    const label = size === 'sm' ? r.date.slice(5) : r.date.slice(5) + ' · ' + r.hardware;
+    return '<div class="bar-col">' +
+      '<div class="bar-val">' + m.fmt(v) + '</div>' +
+      '<div class="bar-track"><div class="bar-fill" style="height:' + h + '%"></div></div>' +
+      '<div class="bar-label">' + label + '</div></div>';
+  }).join('');
+  return '<div class="chart chart-' + size + '"><div class="chart-bars">' + cols + '</div></div>';
+}
+
+function speedBlock(d) {
+  if (!d.speedBench || d.speedBench.length === 0) return '';
+  const rows = d.speedBench.map(function (s) {
+    return '<div class="sb-row"><span class="sb-name">' + s.subset + '</span>' +
+      '<span class="sb-score">' + s.score.toFixed(1) + '</span>' +
+      '<span class="sb-toks">' + Math.round(s.tokensPerSec).toLocaleString('en-US') + ' tok/s</span></div>';
+  }).join('');
+  return '<div class="sb"><div class="sb-head">SPEED-Bench</div>' +
+    '<div class="sb-row sb-cols"><span>Subset</span><span>Score</span><span>Tokens/s</span></div>' +
+    rows + '</div>';
+}
+
+function themeBtn() {
+  return '<button type="button" class="tbtn" data-theme-toggle>Theme: ' + (state.theme === 'dark' ? 'Dark' : 'Light') + '</button>';
+}
+
+function searchBox(extraClass) {
+  return '<div class="search ' + extraClass + '" data-search>' +
+    '<input type="text" placeholder="Search drafters" aria-label="Search drafters" autocomplete="off" spellcheck="false">' +
+    '<div class="search-drop" hidden></div></div>';
+}
+
+function brandBlock() {
+  return '<div class="brand"><h1>Speculators</h1><p>Evaluation results for speculative decoding drafters</p></div>';
+}
+
+const SORTS = {
+  drafter: function (d) { return d.name.toLowerCase(); },
+  target: function (d) { return d.target.toLowerCase(); },
+  algorithm: function (d) { return d.algorithm; },
+  acceptance: function (d) { return d.runs[0].acceptance; },
+  throughput: function (d) { return d.runs[0].throughput; },
+  latency: function (d) { return d.runs[0].latency; },
+  hardware: function (d) { return d.runs[0].hardware; }
+};
+
+function sortedData() {
+  const f = SORTS[state.sort.key];
+  return DATA.slice().sort(function (a, b) {
+    const x = f(a), y = f(b);
+    return (x < y ? -1 : x > y ? 1 : 0) * state.sort.dir;
+  });
+}
+
+function hwTags(d) {
+  const seen = {};
+  const out = [];
+  d.runs.forEach(function (r) { if (!seen[r.hardware]) { seen[r.hardware] = true; out.push(r.hardware); } });
+  return out.join(', ');
+}
+
+function viewA() {
+  const cols = [
+    ['drafter', 'Drafter', ''], ['target', 'Target', ''], ['algorithm', 'Algorithm', ''],
+    ['acceptance', 'Acceptance', 'num'], ['throughput', 'Throughput', 'num'],
+    ['latency', 'Latency', 'num'], ['hardware', 'Hardware', '']
+  ];
+  const head = cols.map(function (c) {
+    const ind = state.sort.key === c[0] ? '<span class="sort-ind">' + (state.sort.dir === 1 ? '▲' : '▼') + '</span>' : '';
+    return '<th class="' + c[2] + '" data-sort="' + c[0] + '">' + c[1] + ind + '</th>';
+  }).join('');
+  const body = sortedData().map(function (d) {
+    const r = d.runs[0];
+    const open = state.expanded === d.id;
+    let html = '<tr class="t-row' + (open ? ' open' : '') + '" data-anchor="' + d.id + '" data-expand="' + d.id + '">' +
+      '<td class="c-name">' + short(d.name) + '</td>' +
+      '<td class="c-sub">' + short(d.target) + '</td>' +
+      '<td><span class="chip chip-algo">' + d.algorithm + '</span></td>' +
+      '<td class="mono num">' + METRICS.acceptance.fmt(r.acceptance) + '</td>' +
+      '<td class="mono num">' + METRICS.throughput.fmt(r.throughput) + '</td>' +
+      '<td class="mono num">' + METRICS.latency.fmt(r.latency) + '</td>' +
+      '<td class="c-hw">' + hwTags(d) + '</td></tr>';
+    if (open) {
+      html += '<tr class="drawer"><td colspan="7"><div class="drawer-in">' +
+        '<div class="drawer-top"><span class="drawer-title mono">' + d.name + '</span>' + seg() + '</div>' +
+        bars(d.runs, state.metric, 'md') +
+        '<div class="run-chips">' + d.runs.map(function (run) { return '<div class="run-chip-row">' + chips(run) + '</div>'; }).join('') + '</div>' +
+        speedBlock(d) +
+        '</div></td></tr>';
+    }
+    return html;
+  }).join('');
+  return '<header class="topbar">' + brandBlock() + searchBox('') + themeBtn() + '</header>' +
+    '<main class="page-a"><div class="panel"><table class="tbl"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div></main>';
+}
+
+function viewB() {
+  const groups = [];
+  const byTarget = {};
+  DATA.forEach(function (d) {
+    if (!byTarget[d.target]) { byTarget[d.target] = []; groups.push(d.target); }
+    byTarget[d.target].push(d);
+  });
+  const list = groups.map(function (t) {
+    const items = byTarget[t].map(function (d) {
+      return '<button type="button" class="li' + (state.selected === d.id ? ' on' : '') + '" data-anchor="' + d.id + '" data-select="' + d.id + '">' +
+        '<span class="li-name">' + short(d.name) + '</span>' +
+        '<span class="li-meta">' + d.algorithm + ' · ' + d.runs.length + (d.runs.length === 1 ? ' run' : ' runs') + '</span></button>';
+    }).join('');
+    return '<div class="wb-group"><div class="wb-group-t">' + short(t) + '</div>' + items + '</div>';
+  }).join('');
+  const d = DATA.find(function (x) { return x.id === state.selected; }) || DATA[0];
+  const cards = d.runs.map(function (r) {
+    return '<div class="run-card"><div class="run-date">' + r.date + '</div>' +
+      '<div class="run-stats">' +
+      '<div><div class="stat-l">Acceptance</div><div class="stat-v">' + METRICS.acceptance.fmt(r.acceptance) + '</div></div>' +
+      '<div><div class="stat-l">Throughput</div><div class="stat-v">' + METRICS.throughput.fmt(r.throughput) + ' tok/s</div></div>' +
+      '<div><div class="stat-l">Latency</div><div class="stat-v">' + METRICS.latency.fmt(r.latency) + ' ms/tok</div></div>' +
+      '</div><div class="chips">' + chips(r) + '</div></div>';
+  }).join('');
+  return '<div class="wb">' +
+    '<aside class="rail">' +
+    '<div class="rail-head">' + brandBlock() + themeBtn() + '</div>' +
+    '<div class="rail-search">' + searchBox('') + '</div>' +
+    '<div class="rail-list">' + list + '</div></aside>' +
+    '<main class="detail"><div class="detail-in">' +
+    '<h2>' + short(d.name) + '</h2>' +
+    '<p class="detail-sub">Target: ' + d.target + ' · Algorithm: ' + d.algorithm + '</p>' +
+    '<div class="detail-toolbar">' + seg() + '</div>' +
+    bars(d.runs, state.metric, 'lg') +
+    '<div class="runs-label">Eval runs</div>' + cards +
+    speedBlock(d) +
+    '</div></main></div>';
+}
+
+function viewC() {
+  const cards = DATA.map(function (d) {
+    return '<button type="button" class="card' + (state.selected === d.id ? ' sel' : '') + '" data-anchor="' + d.id + '" data-select="' + d.id + '">' +
+      '<h3>' + short(d.name) + '</h3>' +
+      '<div class="card-meta"><span>' + short(d.target) + '</span><span class="chip chip-algo">' + d.algorithm + '</span></div>' +
+      bars(d.runs, state.metric, 'sm') +
+      '<div class="card-chips">' + d.runs.map(function (r) { return chips(r); }).join('') + '</div></button>';
+  }).join('');
+  const withSb = DATA.filter(function (d) { return d.speedBench && d.speedBench.length > 0; });
+  let sbSection = '';
+  if (withSb.length > 0) {
+    sbSection = '<section class="sb-section"><h2>SPEED-Bench</h2>' +
+      '<p class="sb-desc">Drafters with SPEED-Bench results</p>' +
+      '<div class="sb-entries">' + withSb.map(function (d) {
+        return '<div><div class="sb-dname">' + short(d.name) + '</div>' + speedBlock(d) + '</div>';
+      }).join('') + '</div></section>';
+  }
+  return '<header class="band">' + themeBtn() +
+    '<h1>Speculators</h1><p class="sub">Evaluation results for speculative decoding drafters</p>' +
+    searchBox('') +
+    '<div class="seg-row">' + seg() + '</div></header>' +
+    '<main class="grid-wrap"><div class="grid-label">' + DATA.length + ' drafters</div>' +
+    '<div class="grid">' + cards + '</div></main>' +
+    sbSection;
+}
+
+function render() {
+  document.documentElement.dataset.theme = state.theme;
+  const app = document.getElementById('app');
+  app.innerHTML = state.variant === 'a' ? viewA() : state.variant === 'b' ? viewB() : viewC();
+  document.getElementById('sw-label').textContent = VARIANT_LABELS[state.variant];
+  bindCommon(app);
+  if (state.variant === 'a') bindA(app);
+  if (state.variant === 'b' || state.variant === 'c') bindSelect(app);
+}
+
+function bindCommon(app) {
+  app.querySelectorAll('[data-theme-toggle]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      render();
+    });
+  });
+  app.querySelectorAll('[data-metric]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.metric = b.dataset.metric;
+      render();
+    });
+  });
+  app.querySelectorAll('[data-search]').forEach(function (wrap) {
+    const input = wrap.querySelector('input');
+    const drop = wrap.querySelector('.search-drop');
+    input.value = state.query;
+    input.addEventListener('input', function () {
+      state.query = input.value;
+      const q = input.value.trim().toLowerCase();
+      if (!q) { drop.hidden = true; drop.innerHTML = ''; return; }
+      const matches = DATA.filter(function (d) { return d.name.toLowerCase().indexOf(q) >= 0; });
+      drop.innerHTML = matches.length
+        ? matches.map(function (d) {
+            return '<button type="button" class="search-item" data-pick="' + d.id + '">' +
+              '<span class="si-name">' + short(d.name) + '</span>' +
+              '<span class="si-meta">' + short(d.target) + ' · ' + d.algorithm + '</span></button>';
+          }).join('')
+        : '<div class="search-empty">No matching drafters</div>';
+      drop.hidden = false;
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { drop.hidden = true; input.blur(); }
+    });
+    drop.addEventListener('click', function (e) {
+      const item = e.target.closest('[data-pick]');
+      if (item) { drop.hidden = true; selectDrafter(item.dataset.pick, true); }
+    });
+  });
+}
+
+function bindA(app) {
+  app.querySelectorAll('[data-sort]').forEach(function (th) {
+    th.addEventListener('click', function () {
+      const key = th.dataset.sort;
+      if (state.sort.key === key) { state.sort.dir = -state.sort.dir; }
+      else { state.sort.key = key; state.sort.dir = 1; }
+      render();
+    });
+  });
+  app.querySelectorAll('[data-expand]').forEach(function (tr) {
+    tr.addEventListener('click', function () {
+      const id = tr.dataset.expand;
+      state.expanded = state.expanded === id ? null : id;
+      state.selected = state.expanded || state.selected;
+      render();
+    });
+  });
+}
+
+function bindSelect(app) {
+  app.querySelectorAll('[data-select]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      state.selected = el.dataset.select;
+      state.expanded = el.dataset.select;
+      render();
+    });
+  });
+}
+
+function selectDrafter(id, scroll) {
+  const d = DATA.find(function (x) { return x.id === id; });
+  if (!d) return;
+  state.selected = id;
+  state.expanded = id;
+  state.query = short(d.name);
+  render();
+  if (scroll) {
+    requestAnimationFrame(function () {
+      const el = document.querySelector('[data-anchor="' + id + '"]');
+      if (el) {
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        el.classList.add('flash');
+        setTimeout(function () { el.classList.remove('flash'); }, 1200);
+      }
+    });
+  }
+}
+
+function setVariant(v) {
+  state.variant = v;
+  history.replaceState(null, '', '?variant=' + v);
+  render();
+}
+
+function cycle(dir) {
+  const i = VARIANTS.indexOf(state.variant);
+  const next = (i + dir + VARIANTS.length) % VARIANTS.length;
+  setVariant(VARIANTS[next]);
+}
+
+function closeAllDrops() {
+  document.querySelectorAll('.search-drop').forEach(function (d) { d.hidden = true; });
+}
+
+document.getElementById('sw-prev').addEventListener('click', function () { cycle(-1); });
+document.getElementById('sw-next').addEventListener('click', function () { cycle(1); });
+
+document.addEventListener('keydown', function (e) {
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  if (e.key === 'ArrowLeft') cycle(-1);
+  else if (e.key === 'ArrowRight') cycle(1);
+});
+
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('[data-search]')) closeAllDrops();
+});
+
+render();
+  </script>
+</body>
+</html>
