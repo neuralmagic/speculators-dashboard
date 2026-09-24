@@ -2,7 +2,7 @@ PYTHON ?= python3
 VENV := .venv
 BIN := $(VENV)/bin
 
-.PHONY: install dev eval deploy quality style setup
+.PHONY: install dev eval deploy quality style setup ingest
 
 # Cluster-machine setup: preflight checks + install the eval scheduler.
 setup:
@@ -19,6 +19,10 @@ dev: site/results.json
 site/results.json: results.json
 	cp results.json $@
 
+# Regenerate site/data.json from checkpoint eval folders (+ results.json seed).
+ingest:
+	$(PYTHON) pipeline/ingest.py
+
 # Run the full eval cycle for all pending models (requires cluster access;
 # see CHEATSHEET.md).
 eval:
@@ -33,7 +37,7 @@ deploy:
 # Lint + verify all pipeline modules import cleanly.
 quality:
 	$(BIN)/ruff check pipeline/
-	cd pipeline && ../$(BIN)/python -c "import discover, deploy_agent, normalize, orchestrate"
+	cd pipeline && ../$(BIN)/python -c "import discover, deploy_agent, ingest, normalize, orchestrate"
 
 # Auto-format the pipeline code.
 style:

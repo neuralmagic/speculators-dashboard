@@ -1,0 +1,1141 @@
+{
+  "updated_at": "2026-09-24T13:06:31Z",
+  "collection": [
+    {
+      "model": "RedHatAI/Llama-3.1-8B-Instruct-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:25:55.000Z"
+    },
+    {
+      "model": "RedHatAI/Llama-3.3-70B-Instruct-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:30:35.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-8B-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:31:11.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-14B-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:31:28.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-32B-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:31:56.000Z"
+    },
+    {
+      "model": "RedHatAI/Llama-4-Maverick-17B-128E-Instruct-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:34:46.000Z"
+    },
+    {
+      "model": "RedHatAI/gpt-oss-20b-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:35:43.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-235B-A22B-Instruct-2507-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:36:23.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-30B-A3B-Instruct-2507-speculator.eagle3",
+      "hf_last_modified": "2026-03-07T23:16:17.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-235B-A22B-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:37:48.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-235B-A22B-Thinking-2507-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:38:19.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-VL-235B-A22B-Instruct-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:38:48.000Z"
+    },
+    {
+      "model": "RedHatAI/gpt-oss-120b-speculator.eagle3",
+      "hf_last_modified": "2026-04-10T15:22:07.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-30B-A3B-Thinking-2507-speculator.eagle3",
+      "hf_last_modified": "2026-04-08T12:40:28.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-32B-Thinking-speculator.eagle3",
+      "hf_last_modified": "2026-04-16T14:17:02.000Z"
+    },
+    {
+      "model": "RedHatAI/gemma-4-31B-it-speculator.eagle3",
+      "hf_last_modified": "2026-04-14T15:47:50.000Z"
+    },
+    {
+      "model": "RedHatAI/gemma-4-26B-A4B-it-speculator.eagle3",
+      "hf_last_modified": "2026-04-14T16:14:29.000Z"
+    },
+    {
+      "model": "RedHatAI/gemma-4-31B-it-speculator.dflash",
+      "hf_last_modified": "2026-05-26T11:21:48.000Z"
+    },
+    {
+      "model": "poolside/Laguna-XS.2-speculator.dflash",
+      "hf_last_modified": "2026-05-19T09:28:04.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-8B-speculator.dflash",
+      "hf_last_modified": "2026-09-16T14:56:26.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-8B-speculator.peagle",
+      "hf_last_modified": "2026-06-09T16:59:48.000Z"
+    },
+    {
+      "model": "mgoin/GLM-5.2-speculator.dspark-preview",
+      "hf_last_modified": "2026-07-07T17:33:14.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-30B-A3B-Instruct-2507-speculator.dflash",
+      "hf_last_modified": "2026-07-09T13:38:27.000Z"
+    },
+    {
+      "model": "RedHatAI/Mellum2-12B-A2.5B-Thinking-speculator.dflash",
+      "hf_last_modified": "2026-07-25T20:24:06.000Z"
+    },
+    {
+      "model": "RedHatAI/NVIDIA-Nemotron-3-Super-120B-A12B-speculator.dflash",
+      "hf_last_modified": "2026-07-25T20:23:40.000Z"
+    },
+    {
+      "model": "RedHatAI/NVIDIA-Nemotron-3-Ultra-550B-A55B-speculator.dflash",
+      "hf_last_modified": "2026-07-16T02:14:46.000Z"
+    },
+    {
+      "model": "RedHatAI/gemma-4-31B-it-speculator.dspark",
+      "hf_last_modified": "2026-07-21T20:04:03.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-30B-A3B-speculator.dflash",
+      "hf_last_modified": "2026-07-13T16:19:16.000Z"
+    },
+    {
+      "model": "RedHatAI/Mistral-Small-4-119B-2603.dflash",
+      "hf_last_modified": "2026-07-23T18:51:05.000Z"
+    },
+    {
+      "model": "RedHatAI/GLM-5.2-speculator.dspark",
+      "hf_last_modified": "2026-08-27T18:31:18.000Z"
+    },
+    {
+      "model": "RedHatAI/Mistral-Small-4-119B-2603-speculator.dspark",
+      "hf_last_modified": "2026-08-07T12:51:30.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3.6-35B-A3B-speculator.dspark",
+      "hf_last_modified": "2026-08-05T21:13:14.000Z"
+    },
+    {
+      "model": "RedHatAI/Kimi-K3-speculator.dspark",
+      "hf_last_modified": "2026-09-14T19:16:46.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-4B-speculator.dspark",
+      "hf_last_modified": "2026-09-16T12:24:05.000Z"
+    },
+    {
+      "model": "RedHatAI/Qwen3-4B-speculator.dflash2",
+      "hf_last_modified": "2026-08-22T23:38:04.000Z"
+    }
+  ],
+  "models": [
+    {
+      "model": "RedHatAI/Llama-3.1-8B-Instruct-speculator.eagle3",
+      "target": "meta-llama/Llama-3.1-8B-Instruct",
+      "algorithm": "eagle3",
+      "gpus": "1xh100",
+      "evaluated_at": "2026-08-06T16:32:18Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 3.0322,
+        "throughput_tps": 4074.73,
+        "ttft_ms": 31.86,
+        "itl_ms": 3.38,
+        "num_drafts": 475021
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 3.5799,
+          "throughput_tps": 5634.34,
+          "itl_ms": 2.88,
+          "ttft_ms": 30.24
+        },
+        "math_reasoning": {
+          "acceptance_length": 3.2375,
+          "throughput_tps": 3662.11,
+          "itl_ms": 3.09,
+          "ttft_ms": 31.37
+        },
+        "qa": {
+          "acceptance_length": 2.4226,
+          "throughput_tps": 2886.21,
+          "itl_ms": 4.32,
+          "ttft_ms": 31.53
+        },
+        "question": {
+          "acceptance_length": 2.9388,
+          "throughput_tps": 3714.14,
+          "itl_ms": 3.41,
+          "ttft_ms": 31.62
+        },
+        "rag": {
+          "acceptance_length": 3.1108,
+          "throughput_tps": 2360.35,
+          "itl_ms": 3.26,
+          "ttft_ms": 32.95
+        },
+        "summarization": {
+          "acceptance_length": 2.9113,
+          "throughput_tps": 4186.85,
+          "itl_ms": 4.0,
+          "ttft_ms": 35.55
+        },
+        "tool_call": {
+          "acceptance_length": 3.0042,
+          "throughput_tps": 3351.4,
+          "itl_ms": 3.47,
+          "ttft_ms": 33.18
+        },
+        "translation": {
+          "acceptance_length": 2.1079,
+          "throughput_tps": 2239.7,
+          "itl_ms": 4.74,
+          "ttft_ms": 31.01
+        },
+        "writing": {
+          "acceptance_length": 2.9485,
+          "throughput_tps": 3778.66,
+          "itl_ms": 3.29,
+          "ttft_ms": 30.6
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/Qwen3-8B-speculator.eagle3",
+      "target": "Qwen/Qwen3-8B",
+      "algorithm": "eagle3",
+      "gpus": "1xh100",
+      "evaluated_at": "2026-08-06T13:57:48Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 2.4644,
+        "throughput_tps": 3659.48,
+        "ttft_ms": 35.36,
+        "itl_ms": 4.82,
+        "num_drafts": 3545881
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 2.5521,
+          "throughput_tps": 3352.87,
+          "itl_ms": 4.99,
+          "ttft_ms": 37.76
+        },
+        "math_reasoning": {
+          "acceptance_length": 2.7086,
+          "throughput_tps": 4372.14,
+          "itl_ms": 4.36,
+          "ttft_ms": 34.82
+        },
+        "qa": {
+          "acceptance_length": 2.3558,
+          "throughput_tps": 3272.51,
+          "itl_ms": 4.68,
+          "ttft_ms": 32.57
+        },
+        "question": {
+          "acceptance_length": 2.416,
+          "throughput_tps": 3509.52,
+          "itl_ms": 4.75,
+          "ttft_ms": 34.37
+        },
+        "rag": {
+          "acceptance_length": 2.421,
+          "throughput_tps": 3665.01,
+          "itl_ms": 5.11,
+          "ttft_ms": 36.43
+        },
+        "summarization": {
+          "acceptance_length": 2.2543,
+          "throughput_tps": 3278.81,
+          "itl_ms": 5.44,
+          "ttft_ms": 36.98
+        },
+        "tool_call": {
+          "acceptance_length": 2.3466,
+          "throughput_tps": 3808.63,
+          "itl_ms": 5.23,
+          "ttft_ms": 37.53
+        },
+        "translation": {
+          "acceptance_length": 2.3442,
+          "throughput_tps": 4253.67,
+          "itl_ms": 4.84,
+          "ttft_ms": 33.18
+        },
+        "writing": {
+          "acceptance_length": 2.4135,
+          "throughput_tps": 3707.31,
+          "itl_ms": 4.7,
+          "ttft_ms": 33.81
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/Qwen3-14B-speculator.eagle3",
+      "target": "Qwen/Qwen3-14B",
+      "algorithm": "eagle3",
+      "gpus": "1xh100",
+      "evaluated_at": "2026-08-26T19:37:15Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 2.4048,
+        "throughput_tps": 2164.16,
+        "ttft_ms": 50.23,
+        "itl_ms": 7.41,
+        "num_drafts": 3201595
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 2.521,
+          "throughput_tps": 2048.48,
+          "itl_ms": 7.37,
+          "ttft_ms": 51.71
+        },
+        "math_reasoning": {
+          "acceptance_length": 2.6762,
+          "throughput_tps": 2494.1,
+          "itl_ms": 6.6,
+          "ttft_ms": 49.54
+        },
+        "qa": {
+          "acceptance_length": 2.205,
+          "throughput_tps": 2455.68,
+          "itl_ms": 8.11,
+          "ttft_ms": 50.59
+        },
+        "question": {
+          "acceptance_length": 2.3437,
+          "throughput_tps": 1922.89,
+          "itl_ms": 7.35,
+          "ttft_ms": 47.89
+        },
+        "rag": {
+          "acceptance_length": 2.3285,
+          "throughput_tps": 2055.89,
+          "itl_ms": 7.68,
+          "ttft_ms": 51.85
+        },
+        "summarization": {
+          "acceptance_length": 2.1551,
+          "throughput_tps": 1912.4,
+          "itl_ms": 8.37,
+          "ttft_ms": 52.65
+        },
+        "tool_call": {
+          "acceptance_length": 2.3783,
+          "throughput_tps": 2412.46,
+          "itl_ms": 7.79,
+          "ttft_ms": 53.72
+        },
+        "translation": {
+          "acceptance_length": 2.3203,
+          "throughput_tps": 2440.9,
+          "itl_ms": 7.43,
+          "ttft_ms": 47.29
+        },
+        "writing": {
+          "acceptance_length": 2.3423,
+          "throughput_tps": 2038.76,
+          "itl_ms": 7.43,
+          "ttft_ms": 48.87
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/gpt-oss-20b-speculator.eagle3",
+      "target": "openai/gpt-oss-20b",
+      "algorithm": "eagle3",
+      "gpus": "1xh100",
+      "evaluated_at": "2026-08-06T17:32:10Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 2.1906,
+        "throughput_tps": 3103.7,
+        "ttft_ms": 51.1,
+        "itl_ms": 5.46,
+        "num_drafts": 1943023
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 2.501,
+          "throughput_tps": 3604.84,
+          "itl_ms": 4.96,
+          "ttft_ms": 52.62
+        },
+        "math_reasoning": {
+          "acceptance_length": 2.8021,
+          "throughput_tps": 3730.82,
+          "itl_ms": 4.18,
+          "ttft_ms": 48.32
+        },
+        "qa": {
+          "acceptance_length": 1.9604,
+          "throughput_tps": 2736.05,
+          "itl_ms": 6.16,
+          "ttft_ms": 50.17
+        },
+        "question": {
+          "acceptance_length": 2.1884,
+          "throughput_tps": 3024.38,
+          "itl_ms": 5.42,
+          "ttft_ms": 51.77
+        },
+        "rag": {
+          "acceptance_length": 2.1029,
+          "throughput_tps": 2980.35,
+          "itl_ms": 5.83,
+          "ttft_ms": 51.17
+        },
+        "summarization": {
+          "acceptance_length": 2.149,
+          "throughput_tps": 3471.02,
+          "itl_ms": 6.03,
+          "ttft_ms": 56.1
+        },
+        "tool_call": {
+          "acceptance_length": 2.1474,
+          "throughput_tps": 2730.88,
+          "itl_ms": 5.75,
+          "ttft_ms": 52.8
+        },
+        "translation": {
+          "acceptance_length": 2.4436,
+          "throughput_tps": 2981.58,
+          "itl_ms": 4.68,
+          "ttft_ms": 49.97
+        },
+        "writing": {
+          "acceptance_length": 2.1872,
+          "throughput_tps": 2953.71,
+          "itl_ms": 5.26,
+          "ttft_ms": 49.27
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/Qwen3-30B-A3B-Thinking-2507-speculator.eagle3",
+      "target": "Qwen/Qwen3-30B-A3B",
+      "algorithm": "eagle3",
+      "gpus": "4xh100",
+      "evaluated_at": "2026-09-09T11:55:41Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 3.2835,
+        "throughput_tps": 3165.66,
+        "ttft_ms": 47.23,
+        "itl_ms": 3.01,
+        "num_drafts": 2531340
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 3.7544,
+          "throughput_tps": 3353.89,
+          "itl_ms": 2.69,
+          "ttft_ms": 47.73
+        },
+        "math_reasoning": {
+          "acceptance_length": 4.1292,
+          "throughput_tps": 4063.74,
+          "itl_ms": 2.44,
+          "ttft_ms": 46.79
+        },
+        "qa": {
+          "acceptance_length": 2.8167,
+          "throughput_tps": 2788.68,
+          "itl_ms": 3.4,
+          "ttft_ms": 45.59
+        },
+        "question": {
+          "acceptance_length": 3.143,
+          "throughput_tps": 2821.11,
+          "itl_ms": 3.11,
+          "ttft_ms": 46.6
+        },
+        "rag": {
+          "acceptance_length": 3.1311,
+          "throughput_tps": 3370.28,
+          "itl_ms": 3.25,
+          "ttft_ms": 48.75
+        },
+        "summarization": {
+          "acceptance_length": 2.6005,
+          "throughput_tps": 2185.08,
+          "itl_ms": 3.75,
+          "ttft_ms": 48.39
+        },
+        "tool_call": {
+          "acceptance_length": 3.0165,
+          "throughput_tps": 2982.98,
+          "itl_ms": 3.82,
+          "ttft_ms": 52.65
+        },
+        "translation": {
+          "acceptance_length": 2.9883,
+          "throughput_tps": 3137.14,
+          "itl_ms": 3.26,
+          "ttft_ms": 46.54
+        },
+        "writing": {
+          "acceptance_length": 3.149,
+          "throughput_tps": 2752.7,
+          "itl_ms": 3.09,
+          "ttft_ms": 46.29
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/Qwen3-32B-Thinking-speculator.eagle3",
+      "target": "Qwen/Qwen3-32B",
+      "algorithm": "eagle3",
+      "gpus": "4xh100",
+      "evaluated_at": "2026-09-10T12:18:11Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 3.3294,
+        "throughput_tps": 3407.6,
+        "ttft_ms": 62.11,
+        "itl_ms": 4.55,
+        "num_drafts": 2451465
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 3.5552,
+          "throughput_tps": 3435.13,
+          "itl_ms": 4.45,
+          "ttft_ms": 61.89
+        },
+        "math_reasoning": {
+          "acceptance_length": 4.2906,
+          "throughput_tps": 4452.7,
+          "itl_ms": 3.67,
+          "ttft_ms": 63.62
+        },
+        "qa": {
+          "acceptance_length": 2.9722,
+          "throughput_tps": 3004.0,
+          "itl_ms": 4.98,
+          "ttft_ms": 59.77
+        },
+        "question": {
+          "acceptance_length": 3.2268,
+          "throughput_tps": 3187.57,
+          "itl_ms": 4.51,
+          "ttft_ms": 59.27
+        },
+        "rag": {
+          "acceptance_length": 3.1452,
+          "throughput_tps": 3293.92,
+          "itl_ms": 5.34,
+          "ttft_ms": 70.0
+        },
+        "summarization": {
+          "acceptance_length": 2.7558,
+          "throughput_tps": 2879.49,
+          "itl_ms": 5.35,
+          "ttft_ms": 64.56
+        },
+        "tool_call": {
+          "acceptance_length": 3.213,
+          "throughput_tps": 3395.66,
+          "itl_ms": 4.97,
+          "ttft_ms": 68.01
+        },
+        "translation": {
+          "acceptance_length": 3.0509,
+          "throughput_tps": 3328.7,
+          "itl_ms": 5.01,
+          "ttft_ms": 63.33
+        },
+        "writing": {
+          "acceptance_length": 3.2342,
+          "throughput_tps": 3083.6,
+          "itl_ms": 4.33,
+          "ttft_ms": 58.37
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/gemma-4-31B-it-speculator.eagle3",
+      "target": "google/gemma-4-31B-it",
+      "algorithm": "eagle3",
+      "gpus": "2xa100",
+      "evaluated_at": "2026-09-10T13:58:41Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 3.0476,
+        "throughput_tps": 739.64,
+        "ttft_ms": 147.7,
+        "itl_ms": 16.97,
+        "num_drafts": 429798
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 4.2904,
+          "throughput_tps": 867.58,
+          "itl_ms": 11.76,
+          "ttft_ms": 128.75
+        },
+        "math_reasoning": {
+          "acceptance_length": 4.3263,
+          "throughput_tps": 1057.56,
+          "itl_ms": 13.85,
+          "ttft_ms": 160.43
+        },
+        "qa": {
+          "acceptance_length": 2.3912,
+          "throughput_tps": 584.96,
+          "itl_ms": 20.42,
+          "ttft_ms": 131.01
+        },
+        "question": {
+          "acceptance_length": 2.9692,
+          "throughput_tps": 672.77,
+          "itl_ms": 16.32,
+          "ttft_ms": 130.39
+        },
+        "rag": {
+          "acceptance_length": 2.9696,
+          "throughput_tps": 467.82,
+          "itl_ms": 23.68,
+          "ttft_ms": 224.08
+        },
+        "summarization": {
+          "acceptance_length": 2.2321,
+          "throughput_tps": 544.34,
+          "itl_ms": 30.83,
+          "ttft_ms": 204.48
+        },
+        "tool_call": {
+          "acceptance_length": 2.5245,
+          "throughput_tps": 262.36,
+          "itl_ms": 17.6,
+          "ttft_ms": 298.05
+        },
+        "translation": {
+          "acceptance_length": 2.8311,
+          "throughput_tps": 777.49,
+          "itl_ms": 19.79,
+          "ttft_ms": 155.28
+        },
+        "writing": {
+          "acceptance_length": 2.9649,
+          "throughput_tps": 694.75,
+          "itl_ms": 16.43,
+          "ttft_ms": 132.63
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/gemma-4-31B-it-speculator.dflash",
+      "target": "google/gemma-4-31B-it",
+      "algorithm": "dflash",
+      "gpus": "2xa100",
+      "evaluated_at": "2026-09-09T14:43:48Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 3.4234,
+        "throughput_tps": 848.85,
+        "ttft_ms": 136.19,
+        "itl_ms": 14.6,
+        "num_drafts": 382931
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 4.9568,
+          "throughput_tps": 1081.84,
+          "itl_ms": 10.32,
+          "ttft_ms": 123.45
+        },
+        "math_reasoning": {
+          "acceptance_length": 4.9815,
+          "throughput_tps": 1202.36,
+          "itl_ms": 11.22,
+          "ttft_ms": 147.4
+        },
+        "qa": {
+          "acceptance_length": 2.6214,
+          "throughput_tps": 652.0,
+          "itl_ms": 18.02,
+          "ttft_ms": 111.63
+        },
+        "question": {
+          "acceptance_length": 3.2992,
+          "throughput_tps": 770.91,
+          "itl_ms": 13.53,
+          "ttft_ms": 121.15
+        },
+        "rag": {
+          "acceptance_length": 3.4223,
+          "throughput_tps": 493.09,
+          "itl_ms": 19.72,
+          "ttft_ms": 193.33
+        },
+        "summarization": {
+          "acceptance_length": 2.5463,
+          "throughput_tps": 596.21,
+          "itl_ms": 27.47,
+          "ttft_ms": 194.75
+        },
+        "tool_call": {
+          "acceptance_length": 2.8934,
+          "throughput_tps": 277.23,
+          "itl_ms": 15.57,
+          "ttft_ms": 246.37
+        },
+        "translation": {
+          "acceptance_length": 3.1416,
+          "throughput_tps": 859.92,
+          "itl_ms": 17.75,
+          "ttft_ms": 153.6
+        },
+        "writing": {
+          "acceptance_length": 3.3044,
+          "throughput_tps": 777.86,
+          "itl_ms": 13.81,
+          "ttft_ms": 117.41
+        }
+      }
+    },
+    {
+      "model": "poolside/Laguna-XS.2-speculator.dflash",
+      "target": "poolside/Laguna-XS.2",
+      "algorithm": "dflash",
+      "gpus": "1xa100",
+      "evaluated_at": "2026-09-08T18:39:24Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 2.5181,
+        "throughput_tps": 833.96,
+        "ttft_ms": 139.72,
+        "itl_ms": 20.04,
+        "num_drafts": 569221
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 3.1314,
+          "throughput_tps": 1155.09,
+          "itl_ms": 16.8,
+          "ttft_ms": 139.41
+        },
+        "math_reasoning": {
+          "acceptance_length": 3.2485,
+          "throughput_tps": 1208.97,
+          "itl_ms": 14.88,
+          "ttft_ms": 124.55
+        },
+        "qa": {
+          "acceptance_length": 2.0379,
+          "throughput_tps": 687.09,
+          "itl_ms": 21.69,
+          "ttft_ms": 115.41
+        },
+        "question": {
+          "acceptance_length": 2.3824,
+          "throughput_tps": 701.65,
+          "itl_ms": 18.4,
+          "ttft_ms": 124.41
+        },
+        "rag": {
+          "acceptance_length": 2.3966,
+          "throughput_tps": 567.93,
+          "itl_ms": 25.3,
+          "ttft_ms": 168.03
+        },
+        "summarization": {
+          "acceptance_length": 2.2927,
+          "throughput_tps": 628.48,
+          "itl_ms": 25.38,
+          "ttft_ms": 170.6
+        },
+        "tool_call": {
+          "acceptance_length": 2.1034,
+          "throughput_tps": 494.12,
+          "itl_ms": 33.06,
+          "ttft_ms": 198.22
+        },
+        "translation": {
+          "acceptance_length": 2.1703,
+          "throughput_tps": 600.22,
+          "itl_ms": 22.88,
+          "ttft_ms": 124.45
+        },
+        "writing": {
+          "acceptance_length": 2.3897,
+          "throughput_tps": 660.51,
+          "itl_ms": 19.07,
+          "ttft_ms": 122.85
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/Qwen3-8B-speculator.dflash",
+      "target": "Qwen/Qwen3-8B",
+      "algorithm": "dflash",
+      "gpus": "1xh100",
+      "evaluated_at": "2026-08-06T15:56:36Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 2.1754,
+        "throughput_tps": 3319.63,
+        "ttft_ms": 33.65,
+        "itl_ms": 5.09,
+        "num_drafts": 4021649
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 2.4191,
+          "throughput_tps": 3257.27,
+          "itl_ms": 5.03,
+          "ttft_ms": 33.58
+        },
+        "math_reasoning": {
+          "acceptance_length": 2.5643,
+          "throughput_tps": 4230.03,
+          "itl_ms": 4.31,
+          "ttft_ms": 33.07
+        },
+        "qa": {
+          "acceptance_length": 1.9822,
+          "throughput_tps": 3075.15,
+          "itl_ms": 5.34,
+          "ttft_ms": 31.47
+        },
+        "question": {
+          "acceptance_length": 2.101,
+          "throughput_tps": 2937.19,
+          "itl_ms": 5.07,
+          "ttft_ms": 33.11
+        },
+        "rag": {
+          "acceptance_length": 2.0337,
+          "throughput_tps": 3231.27,
+          "itl_ms": 5.66,
+          "ttft_ms": 36.11
+        },
+        "summarization": {
+          "acceptance_length": 1.8222,
+          "throughput_tps": 2724.28,
+          "itl_ms": 6.21,
+          "ttft_ms": 38.29
+        },
+        "tool_call": {
+          "acceptance_length": 1.9889,
+          "throughput_tps": 3264.59,
+          "itl_ms": 5.55,
+          "ttft_ms": 35.67
+        },
+        "translation": {
+          "acceptance_length": 1.8999,
+          "throughput_tps": 3507.36,
+          "itl_ms": 5.55,
+          "ttft_ms": 33.3
+        },
+        "writing": {
+          "acceptance_length": 2.1068,
+          "throughput_tps": 3038.61,
+          "itl_ms": 5.03,
+          "ttft_ms": 33.54
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/Qwen3-30B-A3B-Instruct-2507-speculator.dflash",
+      "target": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+      "algorithm": "dflash",
+      "gpus": "4xh100",
+      "evaluated_at": "2026-09-09T06:56:13Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 2.83,
+        "throughput_tps": 3043.69,
+        "ttft_ms": 32.37,
+        "itl_ms": 3.41,
+        "num_drafts": 537978
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 4.1395,
+          "throughput_tps": 3981.83,
+          "itl_ms": 2.4,
+          "ttft_ms": 31.7
+        },
+        "math_reasoning": {
+          "acceptance_length": 4.5388,
+          "throughput_tps": 3793.61,
+          "itl_ms": 2.17,
+          "ttft_ms": 32.13
+        },
+        "qa": {
+          "acceptance_length": 2.1697,
+          "throughput_tps": 2501.11,
+          "itl_ms": 4.54,
+          "ttft_ms": 31.39
+        },
+        "question": {
+          "acceptance_length": 2.7203,
+          "throughput_tps": 2906.63,
+          "itl_ms": 3.75,
+          "ttft_ms": 31.72
+        },
+        "rag": {
+          "acceptance_length": 2.4292,
+          "throughput_tps": 2664.62,
+          "itl_ms": 4.11,
+          "ttft_ms": 33.58
+        },
+        "summarization": {
+          "acceptance_length": 2.1933,
+          "throughput_tps": 2115.17,
+          "itl_ms": 4.1,
+          "ttft_ms": 31.49
+        },
+        "tool_call": {
+          "acceptance_length": 2.826,
+          "throughput_tps": 1894.33,
+          "itl_ms": 3.44,
+          "ttft_ms": 34.07
+        },
+        "translation": {
+          "acceptance_length": 2.3261,
+          "throughput_tps": 691.99,
+          "itl_ms": 4.56,
+          "ttft_ms": 33.94
+        },
+        "writing": {
+          "acceptance_length": 2.7093,
+          "throughput_tps": 2915.26,
+          "itl_ms": 3.84,
+          "ttft_ms": 33.76
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/Mellum2-12B-A2.5B-Thinking-speculator.dflash",
+      "target": "JetBrains/Mellum2-12B-A2.5B-Thinking",
+      "algorithm": "dflash",
+      "gpus": "1xh100",
+      "evaluated_at": "2026-08-26T15:53:40Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 2.7988,
+        "throughput_tps": 4061.1,
+        "ttft_ms": 50.28,
+        "itl_ms": 4.21,
+        "num_drafts": 2069564
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 3.3754,
+          "throughput_tps": 4162.46,
+          "itl_ms": 3.49,
+          "ttft_ms": 47.47
+        },
+        "math_reasoning": {
+          "acceptance_length": 3.893,
+          "throughput_tps": 4974.48,
+          "itl_ms": 2.83,
+          "ttft_ms": 48.21
+        },
+        "qa": {
+          "acceptance_length": 2.5906,
+          "throughput_tps": 3906.39,
+          "itl_ms": 4.58,
+          "ttft_ms": 49.71
+        },
+        "question": {
+          "acceptance_length": 2.7803,
+          "throughput_tps": 3764.62,
+          "itl_ms": 4.38,
+          "ttft_ms": 49.3
+        },
+        "rag": {
+          "acceptance_length": 2.7833,
+          "throughput_tps": 3862.64,
+          "itl_ms": 4.23,
+          "ttft_ms": 53.2
+        },
+        "summarization": {
+          "acceptance_length": 2.4017,
+          "throughput_tps": 3721.24,
+          "itl_ms": 5.18,
+          "ttft_ms": 53.0
+        },
+        "tool_call": {
+          "acceptance_length": 2.884,
+          "throughput_tps": 4528.65,
+          "itl_ms": 4.31,
+          "ttft_ms": 54.02
+        },
+        "translation": {
+          "acceptance_length": 2.5456,
+          "throughput_tps": 4053.51,
+          "itl_ms": 4.56,
+          "ttft_ms": 50.6
+        },
+        "writing": {
+          "acceptance_length": 2.7863,
+          "throughput_tps": 3808.96,
+          "itl_ms": 4.36,
+          "ttft_ms": 49.77
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/Qwen3-30B-A3B-speculator.dflash",
+      "target": "Qwen/Qwen3-30B-A3B",
+      "algorithm": "dflash",
+      "gpus": "4xh100",
+      "evaluated_at": "2026-09-08T20:14:37Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 3.013,
+        "throughput_tps": 3194.85,
+        "ttft_ms": 40.71,
+        "itl_ms": 3.01,
+        "num_drafts": 2755378
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 3.4337,
+          "throughput_tps": 3444.95,
+          "itl_ms": 2.76,
+          "ttft_ms": 42.13
+        },
+        "math_reasoning": {
+          "acceptance_length": 3.7731,
+          "throughput_tps": 4029.8,
+          "itl_ms": 2.44,
+          "ttft_ms": 40.36
+        },
+        "qa": {
+          "acceptance_length": 2.5866,
+          "throughput_tps": 2642.19,
+          "itl_ms": 3.35,
+          "ttft_ms": 38.14
+        },
+        "question": {
+          "acceptance_length": 2.9139,
+          "throughput_tps": 2996.47,
+          "itl_ms": 3.19,
+          "ttft_ms": 40.6
+        },
+        "rag": {
+          "acceptance_length": 2.8513,
+          "throughput_tps": 3105.19,
+          "itl_ms": 3.14,
+          "ttft_ms": 41.11
+        },
+        "summarization": {
+          "acceptance_length": 2.4642,
+          "throughput_tps": 2425.46,
+          "itl_ms": 3.41,
+          "ttft_ms": 39.7
+        },
+        "tool_call": {
+          "acceptance_length": 2.8101,
+          "throughput_tps": 3119.74,
+          "itl_ms": 3.53,
+          "ttft_ms": 44.27
+        },
+        "translation": {
+          "acceptance_length": 2.6249,
+          "throughput_tps": 2711.48,
+          "itl_ms": 3.17,
+          "ttft_ms": 37.18
+        },
+        "writing": {
+          "acceptance_length": 2.91,
+          "throughput_tps": 2987.0,
+          "itl_ms": 3.22,
+          "ttft_ms": 41.3
+        }
+      }
+    },
+    {
+      "model": "RedHatAI/Qwen3.6-35B-A3B-speculator.dspark",
+      "target": "Qwen/Qwen3.6-35B-A3B",
+      "algorithm": "dspark",
+      "gpus": "4xh100",
+      "evaluated_at": "2026-08-26T17:47:25Z",
+      "status": "ok",
+      "metrics": {
+        "acceptance_length": 3.4511,
+        "throughput_tps": 3893.78,
+        "ttft_ms": 115.1,
+        "itl_ms": 5.98,
+        "num_drafts": 2992303
+      },
+      "subsets": {
+        "HumanEval": {
+          "acceptance_length": 3.9943,
+          "throughput_tps": 4502.16,
+          "itl_ms": 4.27,
+          "ttft_ms": 84.64
+        },
+        "math_reasoning": {
+          "acceptance_length": 4.4337,
+          "throughput_tps": 5384.28,
+          "itl_ms": 6.06,
+          "ttft_ms": 142.75
+        },
+        "qa": {
+          "acceptance_length": 3.0898,
+          "throughput_tps": 3527.34,
+          "itl_ms": 6.04,
+          "ttft_ms": 88.35
+        },
+        "question": {
+          "acceptance_length": 3.3861,
+          "throughput_tps": 3997.71,
+          "itl_ms": 5.3,
+          "ttft_ms": 87.0
+        },
+        "rag": {
+          "acceptance_length": 3.5355,
+          "throughput_tps": 3482.12,
+          "itl_ms": 8.76,
+          "ttft_ms": 297.17
+        },
+        "summarization": {
+          "acceptance_length": 3.2952,
+          "throughput_tps": 3718.14,
+          "itl_ms": 8.13,
+          "ttft_ms": 140.76
+        },
+        "tool_call": {
+          "acceptance_length": 3.1266,
+          "throughput_tps": 2803.16,
+          "itl_ms": 9.49,
+          "ttft_ms": 166.57
+        },
+        "translation": {
+          "acceptance_length": 3.137,
+          "throughput_tps": 3770.89,
+          "itl_ms": 6.46,
+          "ttft_ms": 88.49
+        },
+        "writing": {
+          "acceptance_length": 3.3432,
+          "throughput_tps": 3349.14,
+          "itl_ms": 4.76,
+          "ttft_ms": 92.61
+        }
+      }
+    }
+  ]
+}
