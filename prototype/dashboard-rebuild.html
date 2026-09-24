@@ -1,5 +1,6 @@
 <!-- PROTOTYPE: throwaway design exploration for issue #140. Question: what should the rebuilt dashboard look and feel like?
-     Update, pass 5 (converged): the original site with surgical changes. No stats band, no target tabs or algorithm filter (search only), failed models hidden, no Analysis section, no benchmark-suite comparison, no variant switcher. The Benchmarks table expands on row click to an inline per-subset bar chart with a local Acceptance/Throughput/Latency selector, plus a SPEED-Bench subsection that renders only when speed-bench results exist for that model (none in current data). Data is real, trimmed from results.json (14 ok models with per-subset metrics; sweep arrays, acceptance_at_pos, baselines, and speedup dropped). Version provenance (vLLM and speculators versions) is not recorded in results.json; it arrives with the new eval-folder contract, so version badges render only when those fields exist. -->
+     Update, pass 5 (converged): the original site with surgical changes. No stats band, no target tabs or algorithm filter (search only), failed models hidden, no Analysis section, no benchmark-suite comparison, no variant switcher. The Benchmarks table expands on row click to an inline per-subset bar chart with a local Acceptance/Throughput/Latency selector, plus a SPEED-Bench subsection that renders only when speed-bench results exist for that model (none in current data). Data is real, trimmed from results.json (14 ok models with per-subset metrics; sweep arrays, acceptance_at_pos, baselines, and speedup dropped). Version provenance (vLLM and speculators versions) is not recorded in results.json; it arrives with the new eval-folder contract, so version badges render only when those fields exist.
+     Update, pass 6 (manager feedback): algorithm filter buttons above the table (All plus one per algorithm). The table lists the full RedHatAI/speculator-models collection (35 models, snapshot fetched 2026-09-24 from the HF API), merged with the trimmed results.json evals by model id. Models without a successful eval, including the 3 failed runs, render as not evaluated and link to their HF model card. Default order is HF upload date, newest first. -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -535,6 +536,18 @@ tr.detail-row > td:hover { background: transparent; }
 .algo-other  { background: rgba(148,163,184,0.15); color: var(--text-2); }
 .algo-dspark { background: rgba(234,179,8,0.15); color: #facc15; }
 html[data-theme="light"] .algo-dspark { color: #a16207; }
+
+.pend-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--muted-surface);
+  color: var(--text-3);
+}
 
 .hw-chip {
   display: inline-block;
@@ -1649,6 +1662,60 @@ const DATA = [
   }
 ];
 
+const COLLECTION = [
+  ['RedHatAI/Llama-3.1-8B-Instruct-speculator.eagle3', '2026-04-08T12:25:55.000Z'],
+  ['RedHatAI/Llama-3.3-70B-Instruct-speculator.eagle3', '2026-04-08T12:30:35.000Z'],
+  ['RedHatAI/Qwen3-8B-speculator.eagle3', '2026-04-08T12:31:11.000Z'],
+  ['RedHatAI/Qwen3-14B-speculator.eagle3', '2026-04-08T12:31:28.000Z'],
+  ['RedHatAI/Qwen3-32B-speculator.eagle3', '2026-04-08T12:31:56.000Z'],
+  ['RedHatAI/Llama-4-Maverick-17B-128E-Instruct-speculator.eagle3', '2026-04-08T12:34:46.000Z'],
+  ['RedHatAI/gpt-oss-20b-speculator.eagle3', '2026-04-08T12:35:43.000Z'],
+  ['RedHatAI/Qwen3-235B-A22B-Instruct-2507-speculator.eagle3', '2026-04-08T12:36:23.000Z'],
+  ['RedHatAI/Qwen3-30B-A3B-Instruct-2507-speculator.eagle3', '2026-03-07T23:16:17.000Z'],
+  ['RedHatAI/Qwen3-235B-A22B-speculator.eagle3', '2026-04-08T12:37:48.000Z'],
+  ['RedHatAI/Qwen3-235B-A22B-Thinking-2507-speculator.eagle3', '2026-04-08T12:38:19.000Z'],
+  ['RedHatAI/Qwen3-VL-235B-A22B-Instruct-speculator.eagle3', '2026-04-08T12:38:48.000Z'],
+  ['RedHatAI/gpt-oss-120b-speculator.eagle3', '2026-04-10T15:22:07.000Z'],
+  ['RedHatAI/Qwen3-30B-A3B-Thinking-2507-speculator.eagle3', '2026-04-08T12:40:28.000Z'],
+  ['RedHatAI/Qwen3-32B-Thinking-speculator.eagle3', '2026-04-16T14:17:02.000Z'],
+  ['RedHatAI/gemma-4-31B-it-speculator.eagle3', '2026-04-14T15:47:50.000Z'],
+  ['RedHatAI/gemma-4-26B-A4B-it-speculator.eagle3', '2026-04-14T16:14:29.000Z'],
+  ['RedHatAI/gemma-4-31B-it-speculator.dflash', '2026-05-26T11:21:48.000Z'],
+  ['poolside/Laguna-XS.2-speculator.dflash', '2026-05-19T09:28:04.000Z'],
+  ['RedHatAI/Qwen3-8B-speculator.dflash', '2026-09-16T14:56:26.000Z'],
+  ['RedHatAI/Qwen3-8B-speculator.peagle', '2026-06-09T16:59:48.000Z'],
+  ['mgoin/GLM-5.2-speculator.dspark-preview', '2026-07-07T17:33:14.000Z'],
+  ['RedHatAI/Qwen3-30B-A3B-Instruct-2507-speculator.dflash', '2026-07-09T13:38:27.000Z'],
+  ['RedHatAI/Mellum2-12B-A2.5B-Thinking-speculator.dflash', '2026-07-25T20:24:06.000Z'],
+  ['RedHatAI/NVIDIA-Nemotron-3-Super-120B-A12B-speculator.dflash', '2026-07-25T20:23:40.000Z'],
+  ['RedHatAI/NVIDIA-Nemotron-3-Ultra-550B-A55B-speculator.dflash', '2026-07-16T02:14:46.000Z'],
+  ['RedHatAI/gemma-4-31B-it-speculator.dspark', '2026-07-21T20:04:03.000Z'],
+  ['RedHatAI/Qwen3-30B-A3B-speculator.dflash', '2026-07-13T16:19:16.000Z'],
+  ['RedHatAI/Mistral-Small-4-119B-2603.dflash', '2026-07-23T18:51:05.000Z'],
+  ['RedHatAI/GLM-5.2-speculator.dspark', '2026-08-27T18:31:18.000Z'],
+  ['RedHatAI/Mistral-Small-4-119B-2603-speculator.dspark', '2026-08-07T12:51:30.000Z'],
+  ['RedHatAI/Qwen3.6-35B-A3B-speculator.dspark', '2026-08-05T21:13:14.000Z'],
+  ['RedHatAI/Kimi-K3-speculator.dspark', '2026-09-14T19:16:46.000Z'],
+  ['RedHatAI/Qwen3-4B-speculator.dspark', '2026-09-16T12:24:05.000Z'],
+  ['RedHatAI/Qwen3-4B-speculator.dflash2', '2026-08-22T23:38:04.000Z']
+];
+
+const EVALS_BY_ID = {};
+DATA.forEach(function (d) { EVALS_BY_ID[d.model] = d; });
+
+const MODELS = COLLECTION.map(function (pair) {
+  const e = EVALS_BY_ID[pair[0]];
+  const base = { model: pair[0], lastModified: pair[1], algorithm: parseAlgo(pair[0]), evaluated: !!e };
+  if (e) {
+    base.target = e.target;
+    base.gpus = e.gpus;
+    base.evaluated_at = e.evaluated_at;
+    base.metrics = e.metrics;
+    base.subsets = e.subsets;
+  }
+  return base;
+});
+
 const METRICS = {
   acceptance: { label: 'Acceptance', unit: 'tokens', field: 'acceptance_length', better: 'max', fmt: function (v) { return v.toFixed(2); } },
   throughput: { label: 'Throughput', unit: 'tok/s', field: 'throughput_tps', better: 'max', fmt: function (v) { return Math.round(v).toLocaleString('en-US'); } },
@@ -1661,8 +1728,8 @@ const state = {
   theme: 'dark',
   metric: 'acceptance',
   expanded: null,
-  filters: { text: '' },
-  sort: { key: 'throughput', dir: -1 }
+  filters: { text: '', algo: 'all' },
+  sort: { key: 'uploaded', dir: -1 }
 };
 
 const LOGO_SVG = `<svg viewBox="0 0 78 91" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1693,8 +1760,20 @@ function short(name) {
   return idx >= 0 ? name.substring(idx + 1) : name;
 }
 
+function parseAlgo(id) {
+  const marker = '-speculator.';
+  const i = id.indexOf(marker);
+  return i >= 0 ? id.slice(i + marker.length) : id.slice(id.lastIndexOf('.') + 1);
+}
+
+function baseName(id) {
+  const s = short(id);
+  const i = s.indexOf('-speculator.');
+  return i >= 0 ? s.slice(0, i) : s.slice(0, s.lastIndexOf('.'));
+}
+
 function algoClass(algo) {
-  const map = { eagle3: 'algo-eagle3', dflash: 'algo-dflash', peagle: 'algo-peagle', mtp: 'algo-mtp', dspark: 'algo-dspark' };
+  const map = { eagle3: 'algo-eagle3', dflash: 'algo-dflash', dflash2: 'algo-dflash', peagle: 'algo-peagle', mtp: 'algo-mtp', dspark: 'algo-dspark', 'dspark-preview': 'algo-dspark' };
   return map[algo] || 'algo-other';
 }
 
@@ -1802,14 +1881,16 @@ const SORTS = {
   throughput: function (d) { return d.metrics ? d.metrics.throughput_tps : null; },
   ttft: function (d) { return d.metrics ? d.metrics.ttft_ms : null; },
   itl: function (d) { return d.metrics ? d.metrics.itl_ms : null; },
-  hardware: function (d) { return d.gpus || ''; }
+  hardware: function (d) { return d.gpus || ''; },
+  uploaded: function (d) { return d.lastModified; }
 };
 
 function filteredData() {
   const q = state.filters.text.trim().toLowerCase();
-  const out = DATA.filter(function (d) {
+  const out = MODELS.filter(function (d) {
+    if (state.filters.algo !== 'all' && d.algorithm !== state.filters.algo) return false;
     if (q) {
-      const hay = (d.model + ' ' + d.target + ' ' + d.algorithm).toLowerCase();
+      const hay = (d.model + ' ' + (d.target || '') + ' ' + d.algorithm).toLowerCase();
       if (hay.indexOf(q) < 0) return false;
     }
     return true;
@@ -1830,7 +1911,7 @@ function tableHTML() {
   const cols = [
     ['model', 'Drafter', ''], ['acceptance', 'Accept. Len', 'right'],
     ['throughput', 'Throughput', 'right'], ['ttft', 'TTFT', 'right'],
-    ['itl', 'ITL', 'right'], ['hardware', 'Hardware', '']
+    ['itl', 'ITL', 'right'], ['hardware', 'Hardware', ''], ['uploaded', 'Uploaded', '']
   ];
   const head = cols.map(function (c) {
     const arrow = state.sort.key === c[0] ? '<span class="sort-arrow">' + (state.sort.dir === 1 ? '▲' : '▼') + '</span>' : '';
@@ -1841,16 +1922,26 @@ function tableHTML() {
       '<div class="placeholder">No models match the current filters.</div></div>';
   }
   const body = rows.map(function (d) {
-    let html = '<tr class="model-row' + (state.expanded === d.model ? ' expanded' : '') + '" data-expand="' + d.model + '">' +
-      '<td><div class="model-name"><span class="top-row">' +
+    const nameCell = '<td><div class="model-name"><span class="top-row">' +
       '<a class="d-name" href="https://huggingface.co/' + d.model + '" target="_blank" rel="noopener noreferrer">' + short(d.model) + '</a>' +
-      '<span class="algo-badge ' + algoClass(d.algorithm) + '">' + d.algorithm + '</span></span>' +
-      '<span class="model-target">' + short(d.target) + '</span></div></td>' +
+      '<span class="algo-badge ' + algoClass(d.algorithm) + '">' + d.algorithm + '</span>' +
+      (d.evaluated ? '' : '<span class="pend-badge">not evaluated</span>') + '</span>' +
+      '<span class="model-target">' + (d.target ? short(d.target) : baseName(d.model)) + '</span></div></td>';
+    const uploadedCell = '<td><span class="hw-chip">' + d.lastModified.slice(0, 10) + '</span></td>';
+    if (!d.evaluated) {
+      return '<tr class="model-row" data-href="https://huggingface.co/' + d.model + '">' +
+        nameCell +
+        '<td class="right"></td><td class="right"></td><td class="right"></td><td class="right"></td>' +
+        '<td></td>' + uploadedCell + '</tr>';
+    }
+    let html = '<tr class="model-row' + (state.expanded === d.model ? ' expanded' : '') + '" data-expand="' + d.model + '">' +
+      nameCell +
       '<td class="right"><span class="metric-val">' + d.metrics.acceptance_length.toFixed(2) + '</span></td>' +
       '<td class="right"><span class="metric-val">' + METRICS.throughput.fmt(d.metrics.throughput_tps) + '</span><span class="metric-unit">tok/s</span></td>' +
       '<td class="right"><span class="metric-val">' + d.metrics.ttft_ms.toFixed(1) + '</span><span class="metric-unit">ms</span></td>' +
       '<td class="right"><span class="metric-val">' + d.metrics.itl_ms.toFixed(2) + '</span><span class="metric-unit">ms/tok</span></td>' +
-      '<td><span class="hw-chip">' + formatHardware(d.gpus) + '</span> <span class="hw-chip">' + d.evaluated_at.slice(0, 10) + '</span>' + versionChips(d) + '</td></tr>';
+      '<td><span class="hw-chip">' + formatHardware(d.gpus) + '</span> <span class="hw-chip">' + d.evaluated_at.slice(0, 10) + '</span>' + versionChips(d) + '</td>' +
+      uploadedCell + '</tr>';
     if (state.expanded === d.model) html += expandHTML(d);
     return html;
   }).join('');
@@ -1887,9 +1978,20 @@ function expandHTML(d) {
       '<div class="table-shell"><table><thead><tr><th>Subset</th><th class="right">Score</th></tr></thead>' +
       '<tbody>' + sbRows + '</tbody></table></div></div>';
   }
-  return '<tr class="detail-row"><td colspan="6"><div class="detail-inner">' +
+  return '<tr class="detail-row"><td colspan="7"><div class="detail-inner">' +
     tabs + '<div class="gchart-groups">' + bars + '</div>' + sb +
     '</div></td></tr>';
+}
+
+function algoTabsHTML() {
+  const counts = {};
+  MODELS.forEach(function (d) { counts[d.algorithm] = (counts[d.algorithm] || 0) + 1; });
+  const algos = Object.keys(counts).sort();
+  let html = '<button type="button" class="target-tab' + (state.filters.algo === 'all' ? ' active' : '') + '" data-algo="all">All <span class="tab-count">' + MODELS.length + '</span></button>';
+  algos.forEach(function (a) {
+    html += '<button type="button" class="target-tab' + (state.filters.algo === a ? ' active' : '') + '" data-algo="' + a + '">' + a + ' <span class="tab-count">' + counts[a] + '</span></button>';
+  });
+  return '<div class="target-tabs">' + html + '</div>';
 }
 
 function benchmarksHTML() {
@@ -1897,7 +1999,8 @@ function benchmarksHTML() {
     '<div class="section-head">' +
     '<div class="section-eyebrow">Benchmarks</div>' +
     '<h2 class="section-title">The results.</h2>' +
-    '<p class="section-desc">Click a drafter row for per-subset results.</p></div>' +
+    '<p class="section-desc">Click an evaluated drafter row for per-subset results.</p></div>' +
+    '<div id="algo-wrap">' + algoTabsHTML() + '</div>' +
     '<div class="filters">' +
     '<input type="search" class="filter-input" id="filter-text" placeholder="Search models..." aria-label="Search models" value="' + state.filters.text + '">' +
     '</div>' +
@@ -1914,11 +2017,18 @@ function pageHTML() {
 }
 
 function refreshTable() {
+  document.getElementById('algo-wrap').innerHTML = algoTabsHTML();
   document.getElementById('table-wrap').innerHTML = tableHTML();
   bindTableControls();
 }
 
 function bindTableControls() {
+  document.querySelectorAll('#algo-wrap [data-algo]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.filters.algo = b.dataset.algo;
+      refreshTable();
+    });
+  });
   document.querySelectorAll('#table-wrap [data-sort]').forEach(function (th) {
     th.addEventListener('click', function () {
       const key = th.dataset.sort;
@@ -1932,6 +2042,9 @@ function bindTableControls() {
       state.expanded = state.expanded === tr.dataset.expand ? null : tr.dataset.expand;
       refreshTable();
     });
+  });
+  document.querySelectorAll('#table-wrap [data-href]').forEach(function (tr) {
+    tr.addEventListener('click', function () { window.open(tr.dataset.href, '_blank'); });
   });
   document.querySelectorAll('#table-wrap [data-metric]').forEach(function (b) {
     b.addEventListener('click', function (e) {
