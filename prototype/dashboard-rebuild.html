@@ -1763,7 +1763,8 @@ function short(name) {
 function parseAlgo(id) {
   const marker = '-speculator.';
   const i = id.indexOf(marker);
-  return i >= 0 ? id.slice(i + marker.length) : id.slice(id.lastIndexOf('.') + 1);
+  const raw = i >= 0 ? id.slice(i + marker.length) : id.slice(id.lastIndexOf('.') + 1);
+  return raw === 'dspark-preview' ? 'dspark' : raw;
 }
 
 function baseName(id) {
@@ -1773,7 +1774,7 @@ function baseName(id) {
 }
 
 function algoClass(algo) {
-  const map = { eagle3: 'algo-eagle3', dflash: 'algo-dflash', dflash2: 'algo-dflash', peagle: 'algo-peagle', mtp: 'algo-mtp', dspark: 'algo-dspark', 'dspark-preview': 'algo-dspark' };
+  const map = { eagle3: 'algo-eagle3', dflash: 'algo-dflash', dflash2: 'algo-dflash', peagle: 'algo-peagle', mtp: 'algo-mtp', dspark: 'algo-dspark' };
   return map[algo] || 'algo-other';
 }
 
@@ -1897,6 +1898,12 @@ function filteredData() {
   });
   const f = SORTS[state.sort.key];
   out.sort(function (a, b) {
+    if (state.sort.key === 'uploaded') {
+      const ea = a.evaluated ? 0 : 1;
+      const eb = b.evaluated ? 0 : 1;
+      if (ea !== eb) return ea - eb;
+      return (a.lastModified < b.lastModified ? -1 : a.lastModified > b.lastModified ? 1 : 0) * state.sort.dir;
+    }
     const x = f(a), y = f(b);
     if (x === null && y === null) return 0;
     if (x === null) return 1;
