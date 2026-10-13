@@ -28,7 +28,7 @@ On the cluster-connected machine (where `oc` and the `devenv` checkout live),
 starting automated evals is two commands:
 
 ```bash
-git clone https://github.com/rahul-tuli/speculators-dashboard.git && cd speculators-dashboard
+git clone https://github.com/neuralmagic/speculators-dashboard.git && cd speculators-dashboard
 make setup   # preflight checks (oc/gh/devenv) + installs the eval scheduler
 ```
 
@@ -122,12 +122,13 @@ reference; `setup.sh` copies them into `~/.config/systemd/user/` with
 
 ## Deployment
 
-The site is live at <https://rahul-tuli.github.io/speculators-dashboard/>.
+The site is live at <https://neuralmagic.github.io/speculators-dashboard/>.
 On every push to `main` that touches `results.json` or `site/`, the
 `Deploy to GitHub Pages` workflow (`.github/workflows/deploy.yml`) copies the
 canonical `results.json` into `site/` and publishes `site/` as the Pages
-artifact — so the live dashboard always shows real results, and the copy is
-never committed (it's gitignored, same as the local `make dev` copy).
+artifact. The dashboard loads that file at runtime, so newly published results
+appear without rebuilding the page. The copy is never committed (it's
+gitignored, same as the local `make dev` copy).
 
 ## Follow-ups (not yet done)
 

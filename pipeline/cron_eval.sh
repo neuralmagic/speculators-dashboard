@@ -11,7 +11,7 @@
 # which is never auto-picked-up (requires manual label reset).
 set -euo pipefail
 
-REPO="rahul-tuli/speculators-dashboard"
+REPO="neuralmagic/speculators-dashboard"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 PENDING_DIR="$REPO_ROOT/results/pending"
