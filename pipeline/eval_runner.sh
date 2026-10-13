@@ -25,6 +25,15 @@ RAW_NAME="$(basename "$RAW_DIR")"
 source "$REPO_ROOT/local/eval-manual.env"
 export PATH="$VLLM_VENV/bin:$PATH"
 export HF_HOME="${HF_HOME:-/data/fast/huggingface}"
+# Bound CPU thread pools for both vLLM workers and the evaluator. Large hosts
+# expose dozens of CPUs, and each tensor-parallel worker otherwise tries to
+# create its own full Rayon/BLAS pool during model warmup.
+export OPENBLAS_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+export RAYON_NUM_THREADS=1
+export TOKENIZERS_PARALLELISM=false
 
 LOG_DIR="$REPO_ROOT/logs"
 mkdir -p "$LOG_DIR" "$RAW_PARENT"
@@ -87,6 +96,12 @@ echo "vLLM server is healthy and ready!" | tee -a "$LOG_FILE"
 # Run evaluate.py
 echo "Running evaluation sweep..." | tee -a "$LOG_FILE"
 cd "$SPECULATORS_DIR/scripts/evaluate"
+# Keep NumPy/BLAS from creating one thread per host CPU in the evaluation
+# process. On large GPU hosts this can exhaust available pthread resources.
+OPENBLAS_NUM_THREADS=1 \
+OMP_NUM_THREADS=1 \
+MKL_NUM_THREADS=1 \
+NUMEXPR_NUM_THREADS=1 \
 PATH="$GUIDELLM_VENV/bin:$PATH" "$GUIDELLM_VENV/bin/python" evaluate.py \
     --target "http://localhost:${PORT}/v1" \
     --output-dir "$TMP_OUT" \
