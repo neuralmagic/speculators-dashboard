@@ -13,14 +13,25 @@ shift 4
 DEPLOY_CMD=("$@")
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Keep caller-provided relative paths rooted at the dashboard repo. The eval
+# changes into SPECULATORS_DIR below, so leaving RAW_DIR relative would copy
+# results into the wrong checkout.
+case "$RAW_DIR" in
+    /*) ;;
+    *) RAW_DIR="$REPO_ROOT/$RAW_DIR" ;;
+esac
+RAW_PARENT="$(dirname "$RAW_DIR")"
+RAW_NAME="$(basename "$RAW_DIR")"
 source "$REPO_ROOT/local/eval-manual.env"
 export PATH="$VLLM_VENV/bin:$PATH"
 export HF_HOME="${HF_HOME:-/data/fast/huggingface}"
 
 LOG_DIR="$REPO_ROOT/logs"
-mkdir -p "$LOG_DIR" "$RAW_DIR"
+mkdir -p "$LOG_DIR" "$RAW_PARENT"
 LOG_FILE="$LOG_DIR/eval-manual-$SLUG.log"
-TMP_OUT=$(mktemp -d "/tmp/eval-$SLUG-XXXXXX")
+# Keep live artifacts on the same filesystem as RAW_DIR so they survive runner
+# failures and can be promoted without copying after the sweep finishes.
+TMP_OUT=$(mktemp -d "$RAW_PARENT/.$RAW_NAME.in-progress-XXXXXX")
 
 echo "=== Eval Runner for $SLUG ===" | tee -a "$LOG_FILE"
 echo "Port: $PORT" | tee -a "$LOG_FILE"
@@ -43,7 +54,9 @@ cleanup() {
     sleep 5
     kill -9 "$VLLM_PID" 2>/dev/null || true
     wait "$VLLM_PID" 2>/dev/null || true
-    rm -rf "$TMP_OUT"
+    if [ -n "$TMP_OUT" ] && [ -d "$TMP_OUT" ]; then
+        echo "Preserving evaluation output at $TMP_OUT" | tee -a "$LOG_FILE"
+    fi
 }
 trap cleanup EXIT
 
@@ -84,9 +97,24 @@ PATH="$GUIDELLM_VENV/bin:$PATH" "$GUIDELLM_VENV/bin/python" evaluate.py \
         exit 1
     }
 
-echo "Evaluation sweep finished successfully. Copying results to $RAW_DIR..." | tee -a "$LOG_FILE"
-rm -rf "$RAW_DIR"/*
-cp -r "$TMP_OUT"/* "$RAW_DIR"/
+echo "Evaluation sweep finished successfully. Promoting results to $RAW_DIR..." | tee -a "$LOG_FILE"
+BACKUP_DIR=""
+if [ -e "$RAW_DIR" ]; then
+    BACKUP_DIR=$(mktemp -d "$RAW_PARENT/.$RAW_NAME.previous-XXXXXX")
+    rmdir "$BACKUP_DIR"
+    mv "$RAW_DIR" "$BACKUP_DIR"
+fi
+if ! mv "$TMP_OUT" "$RAW_DIR"; then
+    echo "ERROR: failed promoting evaluation results to $RAW_DIR" | tee -a "$LOG_FILE"
+    if [ -n "$BACKUP_DIR" ] && [ -e "$BACKUP_DIR" ]; then
+        mv "$BACKUP_DIR" "$RAW_DIR" || true
+    fi
+    exit 1
+fi
+TMP_OUT=""
+if [ -n "$BACKUP_DIR" ]; then
+    rm -rf "$BACKUP_DIR" || echo "WARNING: could not remove previous raw results at $BACKUP_DIR" | tee -a "$LOG_FILE"
+fi
 echo "Files copied to $RAW_DIR:" | tee -a "$LOG_FILE"
 ls -la "$RAW_DIR" | tee -a "$LOG_FILE"
 

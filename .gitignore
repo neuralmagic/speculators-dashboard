@@ -3,6 +3,8 @@
 logs/
 results/pending/
 results/*/raw/
+results/*/.raw.in-progress-*/
+results/*/.raw.previous-*/
 __pycache__/
 site/results.json
 .DS_Store
