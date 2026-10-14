@@ -135,7 +135,7 @@ if ! mv "$TMP_OUT" "$RAW_DIR"; then
 fi
 TMP_OUT=""
 if [ -n "$BACKUP_DIR" ]; then
-    rm -rf "$BACKUP_DIR" || echo "WARNING: could not remove previous raw results at $BACKUP_DIR" | tee -a "$LOG_FILE"
+    echo "Previous raw results preserved at $BACKUP_DIR" | tee -a "$LOG_FILE"
 fi
 echo "Files copied to $RAW_DIR:" | tee -a "$LOG_FILE"
 ls -la "$RAW_DIR" | tee -a "$LOG_FILE"
