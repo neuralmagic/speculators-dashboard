@@ -3,6 +3,7 @@
 logs/
 results/pending/
 results/*/raw/
+results/*/raw-attempt-*/
 results/*/.raw.in-progress-*/
 results/*/.raw.previous-*/
 __pycache__/

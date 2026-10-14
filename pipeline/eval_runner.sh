@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Runner script for manual evals: serves vLLM, polls /health, runs evaluate.py, copies results, cleans up.
 # Usage:
-#   pipeline/eval_runner.sh <slug> <port> <cuda_devices> <raw_dir> <deploy_cmd...>
+#   EVAL_GEN_KWARGS='{"temperature":0,"max_tokens":512}' \
+#     pipeline/eval_runner.sh <slug> <port> <cuda_devices> <raw_dir> <deploy_cmd...>
 
 set -eo pipefail
 
@@ -48,6 +49,11 @@ echo "CUDA_VISIBLE_DEVICES: $CUDA_DEVICES" | tee -a "$LOG_FILE"
 echo "Deploy Command: ${DEPLOY_CMD[*]}" | tee -a "$LOG_FILE"
 echo "Raw Dir: $RAW_DIR" | tee -a "$LOG_FILE"
 echo "TMP_OUT: $TMP_OUT" | tee -a "$LOG_FILE"
+EVAL_ARGS=()
+if [ -n "${EVAL_GEN_KWARGS:-}" ]; then
+    EVAL_ARGS+=(--gen-kwargs "$EVAL_GEN_KWARGS")
+    echo "Eval generation kwargs: $EVAL_GEN_KWARGS" | tee -a "$LOG_FILE"
+fi
 
 # Start vllm serve
 export CUDA_VISIBLE_DEVICES="$CUDA_DEVICES"
@@ -106,6 +112,7 @@ PATH="$GUIDELLM_VENV/bin:$PATH" "$GUIDELLM_VENV/bin/python" evaluate.py \
     --target "http://localhost:${PORT}/v1" \
     --output-dir "$TMP_OUT" \
     --max-requests 80 \
+    "${EVAL_ARGS[@]}" \
     sweep >> "$LOG_FILE" 2>&1 || {
         echo "ERROR: evaluate.py sweep failed!" | tee -a "$LOG_FILE"
         tail -n 40 "$LOG_FILE"
