@@ -67,27 +67,26 @@ def validate_record(record: dict) -> None:
         raise ValueError(f"status must be 'ok' or 'failed', got {record['status']!r}")
 
     metrics = record["metrics"]
-    if record["status"] == "failed":
-        if metrics is not None:
-            raise ValueError("metrics must be null when status is 'failed'")
-        return
+    if record["status"] == "failed" and metrics is not None:
+        raise ValueError("metrics must be null when status is 'failed'")
 
-    if metrics is None:
-        raise ValueError("metrics must not be null when status is 'ok'")
+    if record["status"] == "ok":
+        if metrics is None:
+            raise ValueError("metrics must not be null when status is 'ok'")
 
-    missing_m = REQUIRED_METRICS_KEYS - set(metrics)
-    if missing_m:
-        raise ValueError(f"metrics missing required keys: {missing_m}")
+        missing_m = REQUIRED_METRICS_KEYS - set(metrics)
+        if missing_m:
+            raise ValueError(f"metrics missing required keys: {missing_m}")
 
-    if not isinstance(metrics["acceptance_at_pos"], list):
-        raise ValueError("metrics.acceptance_at_pos must be a list")
-    if not isinstance(metrics["subsets"], dict) or len(metrics["subsets"]) == 0:
-        raise ValueError("metrics.subsets must be a non-empty dict")
+        if not isinstance(metrics["acceptance_at_pos"], list):
+            raise ValueError("metrics.acceptance_at_pos must be a list")
+        if not isinstance(metrics["subsets"], dict) or len(metrics["subsets"]) == 0:
+            raise ValueError("metrics.subsets must be a non-empty dict")
 
-    for name, subset in metrics["subsets"].items():
-        missing_s = REQUIRED_SUBSET_KEYS - set(subset)
-        if missing_s:
-            raise ValueError(f"subset {name!r} missing required keys: {missing_s}")
+        for name, subset in metrics["subsets"].items():
+            missing_s = REQUIRED_SUBSET_KEYS - set(subset)
+            if missing_s:
+                raise ValueError(f"subset {name!r} missing required keys: {missing_s}")
 
     deploy = record.get("deploy")
     if not isinstance(deploy, dict):
@@ -98,13 +97,14 @@ def validate_record(record: dict) -> None:
 
     try:
         import jsonschema
+    except ImportError:
+        return
 
-        schema = json.loads(SCHEMA_JSON.read_text())
-        model_schema = schema["$defs"]["model"]
-        model_schema["$defs"] = schema["$defs"]
+    schema = json.loads(SCHEMA_JSON.read_text())
+    model_schema = json.loads(json.dumps(schema["$defs"]["model"]))
+    model_schema["$defs"] = schema["$defs"]
+    try:
         jsonschema.validate(record, model_schema)
-    except (ImportError, RecursionError):
-        pass
     except jsonschema.ValidationError as exc:
         raise ValueError(f"schema validation failed: {exc.message}") from exc
 
@@ -290,6 +290,8 @@ def upsert_result(
     deploy_command=None,
     deploy_recipe_source=None,
     deploy_recipe_model=None,
+    provenance=None,
+    output_path=None,
 ):
     """Normalize one eval run into results.json (idempotent upsert)."""
     entry_path = Path(entry_path)
@@ -320,6 +322,8 @@ def upsert_result(
     for key in ("params", "architecture", "base_model"):
         if entry.get(key) is not None:
             record[key] = entry[key]
+    if provenance is not None:
+        record["provenance"] = provenance
 
     if status == "ok":
         if not raw_dir:
@@ -333,6 +337,13 @@ def upsert_result(
         )
 
     validate_record(record)
+
+    if output_path is not None:
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(record, indent=2) + "\n")
+        print(f"{output_path}: wrote {record['model']} (status={status})")
+        return
 
     results = _load_results()
     models = [m for m in results.get("models", []) if m["model"] != record["model"]]
@@ -357,6 +368,8 @@ def main() -> None:
     eval_p.add_argument("--deploy-command", default=None)
     eval_p.add_argument("--deploy-recipe-source", default=None)
     eval_p.add_argument("--deploy-recipe-model", default=None)
+    eval_p.add_argument("--provenance", type=Path, default=None)
+    eval_p.add_argument("--output", type=Path, default=None)
 
     base_p = sub.add_parser("baseline", help="Upsert an autoregressive baseline")
     base_p.add_argument("--target", required=True)
@@ -374,12 +387,17 @@ def main() -> None:
         eval_p2.add_argument("--deploy-command", default=None)
         eval_p2.add_argument("--deploy-recipe-source", default=None)
         eval_p2.add_argument("--deploy-recipe-model", default=None)
+        eval_p2.add_argument("--provenance", type=Path, default=None)
+        eval_p2.add_argument("--output", type=Path, default=None)
         args = eval_p2.parse_args()
         args.cmd = "eval"
 
     if args.cmd == "baseline":
         upsert_baseline(args.target, args.gpus, args.throughput)
     else:
+        provenance = (
+            json.loads(args.provenance.read_text()) if args.provenance else None
+        )
         upsert_result(
             args.entry,
             args.status,
@@ -388,6 +406,8 @@ def main() -> None:
             deploy_command=args.deploy_command,
             deploy_recipe_source=args.deploy_recipe_source,
             deploy_recipe_model=args.deploy_recipe_model,
+            provenance=provenance,
+            output_path=args.output,
         )
 
 

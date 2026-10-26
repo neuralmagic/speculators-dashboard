@@ -133,10 +133,50 @@ def extract_metadata(model_id: str) -> dict | None:
     }
 
 
+RUNNER_LABELS = {
+    1: "ibm-wdc-os-h100-solo",
+    2: "ibm-wdc-os-h100-duo",
+    4: "ibm-wdc-os-h100-quad",
+    8: "ibm-wdc-os-h100-octo",
+}
+
+
+def h100_sizing(target: str) -> tuple[int | None, str]:
+    """Return an H100 count for GHA without changing legacy cluster sizing."""
+    for key, (gpus, _gtype) in SIZING_OVERRIDES.items():
+        if key.lower() in target.lower():
+            return gpus, f"override:{key}"
+    size = parse_target_size_b(target)
+    if size is None:
+        return None, "unknown-size-needs-triage"
+    if size <= 8:
+        return 1, ""
+    if size <= 14:
+        return 2, ""
+    if size <= 70:
+        return 4, ""
+    return 8, ""
+
+
 def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gha", action="store_true", help="emit an H100 GHA matrix")
+    parser.add_argument("--model", help="evaluate this model even if results are current")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=PENDING_DIR / "gha-matrix.json",
+        help="matrix output path used with --gha",
+    )
+    args = parser.parse_args()
+
     collection = fetch_json(COLLECTION_URL)
     items = [it for it in collection.get("items", []) if it.get("type") == "model"]
     print(f"Collection has {len(items)} models")
+    if args.model and not any(it["id"] == args.model for it in items):
+        parser.error(f"model is not in the collection: {args.model}")
 
     results = (
         json.loads(RESULTS_JSON.read_text())
@@ -155,20 +195,34 @@ def main() -> None:
         old.unlink()
 
     pending = []
+    matrix = []
     for item in items:
         model_id = item["id"]
+        if args.model and model_id != args.model:
+            continue
         last_modified = item.get("lastModified")
         if item.get("gated") or item.get("private"):
             print(f"  SKIP (gated/private): {model_id}")
             continue
-        if (model_id, last_modified) in done:
+        if not args.model and (model_id, last_modified) in done:
             print(f"  up-to-date: {model_id}")
             continue
         meta = extract_metadata(model_id)
         if meta is None:
             print(f"  SKIP (no speculators config): {model_id}")
             continue
-        gpus, gpu_type, note = gpu_sizing(meta["target"] or "")
+        tokens = meta["num_speculative_tokens"]
+        if not isinstance(tokens, int) or isinstance(tokens, bool) or tokens < 1:
+            print(f"  NEEDS TRIAGE (invalid speculative_tokens in config): {model_id}")
+            continue
+        if args.gha:
+            gpus, note = h100_sizing(meta["target"] or "")
+            gpu_type = "h100"
+        else:
+            gpus, gpu_type, note = gpu_sizing(meta["target"] or "")
+        if gpus is None:
+            print(f"  NEEDS TRIAGE (unknown target size): {model_id}")
+            continue
         slug = slugify(model_id)
         entry = {
             "model": model_id,
@@ -185,11 +239,26 @@ def main() -> None:
         for key in ("params", "architecture", "base_model"):
             if key in meta:
                 entry[key] = meta[key]
-        (PENDING_DIR / f"{slug}.json").write_text(json.dumps(entry, indent=2) + "\n")
+        entry_path = PENDING_DIR / f"{slug}.json"
+        entry_path.write_text(json.dumps(entry, indent=2) + "\n")
         pending.append(slug)
+        if args.gha:
+            matrix.append(
+                {
+                    "model": model_id,
+                    "slug": slug,
+                    "gpus": gpus,
+                    "runner": RUNNER_LABELS[gpus],
+                    "entry": str(entry_path.relative_to(REPO_ROOT)),
+                }
+            )
         print(f"  PENDING: {model_id} -> {gpus}x{gpu_type} target={meta['target']}")
 
     (PENDING_DIR / "index.json").write_text(json.dumps(pending, indent=2) + "\n")
+    if args.gha:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps({"include": matrix}, indent=2) + "\n")
+        print(f"GHA matrix: {args.output}")
     print(f"\n{len(pending)} model(s) pending evaluation")
 
 

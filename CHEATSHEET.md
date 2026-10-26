@@ -1,4 +1,22 @@
-# Cheatsheet — running the dashboard pipeline on the cluster machine
+# Cheatsheet — running the dashboard pipeline
+
+## WDC GitHub Actions
+
+Preview the exact H100 execution plan without using GPUs:
+
+```bash
+python3 pipeline/discover.py --gha
+cat results/pending/gha-matrix.json
+python3 pipeline/discover.py --gha --model RedHatAI/<drafter>  # force one model
+```
+
+In GitHub, open **Actions → Evaluate speculators on WDC → Run workflow**.
+Enter the full drafter ID to force one model and leave `publish` disabled for a
+branch smoke test. The plan, per-model raw metrics/logs, and merged dashboard
+JSON are separate run artifacts. Set `publish` only when intentionally updating
+`results.json` on the selected branch.
+
+## Legacy OpenShift commands
 
 These commands are meant for the machine that has `oc` access to the OpenShift
 cluster and the `devenv` repo checked out (i.e. where `devenv` normally works).

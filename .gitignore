@@ -11,6 +11,7 @@ site/results.json
 .DS_Store
 docs/*
 !docs/agents/
+!docs/wdc-eval-open-questions.md
 CLAUDE.md
 !CLAUDE.md
 local/

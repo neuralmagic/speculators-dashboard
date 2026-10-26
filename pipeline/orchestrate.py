@@ -173,6 +173,7 @@ def evaluate_model(entry: dict):
             )
         except Exception:
             print(f"ERROR: normalize.py also failed for {model}")
+        raise
     finally:
         teardown_pod()
 
@@ -296,16 +297,22 @@ def refresh():
     run_cmd([sys.executable, str(SCRIPT_DIR / "discover.py")])
 
     pending_dir = REPO_ROOT / "results" / "pending"
-    for entry_path in sorted(pending_dir.glob("*.json")):
-        if entry_path.name == "index.json":
-            continue
+    pending = json.loads((pending_dir / "index.json").read_text())
+    failures = []
+    for slug in pending:
+        entry_path = pending_dir / f"{slug}.json"
         entry = json.loads(entry_path.read_text())
-        evaluate_model(entry)
+        try:
+            evaluate_model(entry)
+        except Exception as e:
+            failures.append((entry["model"], e))
         entry_path.unlink(missing_ok=True)
 
     print(
         f"=== refresh finished {datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')} ==="
     )
+    if failures:
+        raise RuntimeError(f"{len(failures)} eval(s) failed: {failures}")
 
 
 def main():

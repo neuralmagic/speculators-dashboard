@@ -46,10 +46,10 @@
       ],
       "properties": {
         "model": { "type": "string" },
-        "target": { "type": "string" },
-        "algorithm": { "type": "string" },
-        "num_speculative_tokens": { "type": "integer", "minimum": 1 },
-        "hf_last_modified": { "type": "string", "format": "date-time" },
+        "target": { "type": ["string", "null"] },
+        "algorithm": { "type": ["string", "null"] },
+        "num_speculative_tokens": { "type": ["integer", "null"], "minimum": 1 },
+        "hf_last_modified": { "type": ["string", "null"], "format": "date-time" },
         "evaluated_at": { "type": "string", "format": "date-time" },
         "gpus": { "type": "string" },
         "params": {
@@ -78,7 +78,11 @@
             { "type": "string" }
           ]
         },
-        "deploy": { "$ref": "#/$defs/deploy" }
+        "deploy": { "$ref": "#/$defs/deploy" },
+        "provenance": {
+          "type": "object",
+          "description": "Resolved source, dependency, checkpoint, and benchmark versions for a WDC eval"
+        }
       },
       "additionalProperties": false
     },

@@ -37,7 +37,8 @@ deploy:
 # Lint + verify all pipeline modules import cleanly.
 quality:
 	$(BIN)/ruff check pipeline/
-	cd pipeline && ../$(BIN)/python -c "import discover, deploy_agent, ingest, normalize, orchestrate"
+	cd pipeline && ../$(BIN)/python -c "import discover, deploy_agent, ingest, merge_records, normalize, orchestrate"
+	bash -n pipeline/wdc_eval.sh
 
 # Auto-format the pipeline code.
 style:
