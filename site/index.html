@@ -736,7 +736,8 @@ function initializeDashboardData(results) {
     const model = entry[0];
     const lastModified = entry[1];
     const record = evalsById.get(model);
-    const evaluated = !!(record && record.status === 'ok' && record.metrics);
+    const metricsRecord = record && record.metrics ? record : record && record.last_success;
+    const evaluated = !!(metricsRecord && metricsRecord.metrics);
     const base = {
       model: model,
       lastModified: lastModified,
@@ -751,8 +752,10 @@ function initializeDashboardData(results) {
       base.evaluated_at = record.evaluated_at;
     }
     if (evaluated) {
-      base.metrics = record.metrics;
-      base.subsets = record.metrics.subsets || {};
+      base.gpus = metricsRecord.gpus;
+      base.evaluated_at = metricsRecord.evaluated_at;
+      base.metrics = metricsRecord.metrics;
+      base.subsets = metricsRecord.metrics.subsets || {};
     }
     return base;
   });

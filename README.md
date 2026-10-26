@@ -5,12 +5,11 @@ from the HuggingFace collection
 [RedHatAI/speculator-models](https://huggingface.co/collections/RedHatAI/speculator-models).
 
 An automated pipeline watches the collection, evaluates new/updated speculators on
-our OpenShift cluster (GPU pods provisioned with
-[devenv](https://github.com/neuralmagic/devenv), models served with
-[vLLM](https://github.com/vllm-project/vllm), acceptance metrics measured with the
-[speculators](https://github.com/vllm-project/speculators) eval harness), stores
-results in `results.json`, and tears the GPU pod down. The site in `site/` renders
-`results.json` as a static page.
+WDC H100 runners through GitHub Actions, serves them with
+[vLLM](https://github.com/vllm-project/vllm), measures them with the
+[speculators](https://github.com/vllm-project/speculators) eval harness, and stores
+results in `results.json`. The site in `site/` renders `results.json` as a static
+page. A legacy OpenShift/devenv execution path remains available for manual use.
 
 ## Quick start
 
@@ -52,11 +51,13 @@ All common tasks are Makefile targets:
 ```
 results.json            the "database" — one entry per evaluated model
 pipeline/
-  discover.py           list collection, diff vs results.json -> results/pending/*.json
-  orchestrate.py        full eval cycle: discover -> eval -> normalize
+  discover.py           diff collection -> pending entries + H100 GHA matrix
+  wdc_eval.sh           direct WDC runner: vllm serve + evaluate.py + record artifact
+  merge_records.py      validate and merge per-job records into results.json
+  orchestrate.py        legacy OpenShift eval cycle: discover -> eval -> normalize
   deploy_agent.py       vllm serve command lookup (recipes.vllm.ai, then fallback)
   normalize.py          eval output -> results.json entry (idempotent upsert)
-  in_pod_eval.sh        runs inside the pod: vllm serve + evaluate.py
+  in_pod_eval.sh        legacy in-pod adapter: vllm serve + evaluate.py
   cron_eval.sh          cron entrypoint: picks up eval:pending GitHub issues
   setup.sh              cluster-machine setup: preflight checks + install scheduler
   speculators-eval.{service,timer}  systemd user units that schedule cron_eval.sh
@@ -93,13 +94,45 @@ dashboard; a model is re-evaluated when its HF `lastModified` changes.
 - **Results changes** ship via `make deploy` (commits `results.json` +
   `results/` and pushes).
 
-## Automation
+## WDC GitHub Actions evals
 
-On the cluster-connected machine, `pipeline/cron_eval.sh` runs unattended:
-every 30 minutes it picks up `eval:pending` GitHub issues and evaluates them
-one at a time. `make setup` (→ `pipeline/setup.sh`) installs the scheduler —
-a systemd **user** timer where available, a flock-guarded crontab entry
-otherwise — after verifying `oc`, `gh`, `flock`, and the `devenv` checkout.
+`.github/workflows/evals.yml` is the end-to-end WDC pipeline. Its hosted
+discovery job diffs the HF collection against `results.json` and emits one H100
+matrix entry per pending model. GPU jobs use the WDC `solo`/`duo`/`quad`/`octo`
+runner labels, run the existing vLLM + Speculators sweep, and upload independent
+records, raw CSVs, provenance, and logs. A final job merges those records without
+concurrent writes to `results.json`.
+
+The drafter's HF `config.json` is authoritative for `num_speculative_tokens`;
+missing or invalid values block automatic execution instead of selecting a
+default. Discovery pins the drafter commit SHA and vLLM serves that exact
+revision. GitHub Actions checks out `vllm-project/speculators` at the selected
+ref before the runner script starts. The result's deploy command and provenance
+record the exact serve/eval arguments and resolved software packages.
+
+Branch/manual runs default to artifacts only and do not update the website. To
+test one model from the GitHub Actions UI, choose **Evaluate speculators on WDC**,
+enter its full HF model ID, and leave **publish** off. Download
+`dashboard-results-<run-id>-<attempt>` to inspect the merged site data and each
+`eval-result-<run-id>-<attempt>-<slug>` artifact for diagnostics. Use **Re-run
+all jobs**, not a partial failed-job rerun, because publication requires one
+record for every model in the plan. If model downloads need authentication,
+configure the read-only `HF_READ_TOKEN` repository secret.
+
+Scheduled runs on `main` publish `results.json`, which triggers Pages. This
+requires the repository's `GITHUB_TOKEN` to have permission to push `main`.
+Publication re-merges records onto the latest branch with bounded non-force
+retries. A failed reevaluation keeps its last successful metrics in
+`last_success` while remaining eligible for retry. The legacy cluster timer/cron
+must be stopped before scheduled GHA publication is enabled; two schedulers must
+not write results concurrently.
+
+## Legacy OpenShift automation
+
+On the cluster-connected machine, `pipeline/cron_eval.sh` can still process
+`eval:pending` GitHub issues for manual/legacy operation. `make setup` installs
+that scheduler. The HF poll-only workflow remains available for manual issue
+creation, but its schedule is replaced by the unified WDC eval workflow.
 
 Verify and watch:
 

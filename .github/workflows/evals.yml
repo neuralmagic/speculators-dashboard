@@ -1,0 +1,200 @@
+name: Evaluate speculators on WDC
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Optional Hugging Face drafter ID; forces reevaluation'
+        required: false
+        type: string
+      speculators_ref:
+        description: 'vllm-project/speculators branch, tag, or commit'
+        required: true
+        default: main
+        type: string
+      vllm_version:
+        description: 'nightly or an exact vLLM version'
+        required: true
+        default: nightly
+        type: string
+      publish:
+        description: 'Commit merged results.json to this branch'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wdc-evals-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      has_evals: ${{ steps.plan.outputs.has_evals }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - id: plan
+        env:
+          MODEL: ${{ inputs.model }}
+        run: |
+          set -euo pipefail
+          ARGS=(--gha)
+          if [ -n "$MODEL" ]; then
+            ARGS+=(--model "$MODEL")
+          fi
+          python pipeline/discover.py "${ARGS[@]}"
+          echo "matrix=$(jq -c . results/pending/gha-matrix.json)" >> "$GITHUB_OUTPUT"
+          echo "has_evals=$(jq '.include | length > 0' results/pending/gha-matrix.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: results/pending/
+          retention-days: 14
+
+  evaluate:
+    needs: discover
+    if: needs.discover.outputs.has_evals == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    env:
+      HF_HOME: /model-cache
+      SPECULATORS_REF: ${{ inputs.speculators_ref || 'main' }}
+      VLLM_VERSION: ${{ inputs.vllm_version || 'nightly' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: vllm-project/speculators
+          ref: ${{ inputs.speculators_ref || 'main' }}
+          path: speculators
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v5
+      - name: Download discovered model metadata
+        uses: actions/download-artifact@v4
+        with:
+          name: eval-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: results/pending
+      - name: Run eval
+        env:
+          HF_TOKEN: ${{ secrets.HF_READ_TOKEN }}
+          SPECULATORS_DIR: ${{ github.workspace }}/speculators
+        run: bash pipeline/wdc_eval.sh "${{ matrix.entry }}" "$RUNNER_TEMP/eval-output"
+      - name: Record setup or infrastructure failure
+        if: failure()
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/eval-output"
+          if [ -f "$OUT/record.json" ]; then
+            echo 'Detailed failure record already exists'
+            exit 0
+          fi
+          mkdir -p "$OUT"
+          ARGS=()
+          if [ -f "$OUT/provenance.json" ]; then
+            ARGS+=(--provenance "$OUT/provenance.json")
+          fi
+          python3 pipeline/normalize.py eval \
+            --entry "${{ matrix.entry }}" --status failed \
+            --error "WDC job failed before a result was normalized; see job artifacts" \
+            --output "$OUT/record.json" "${ARGS[@]}"
+      - name: Upload eval record and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-result-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.slug }}
+          path: |
+            ${{ runner.temp }}/eval-output/record.json
+            ${{ runner.temp }}/eval-output/raw/
+            ${{ runner.temp }}/eval-output/provenance.json
+            ${{ runner.temp }}/eval-output/vllm.log
+            ${{ runner.temp }}/eval-output/evaluate.log
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: [discover, evaluate]
+    if: always() && needs.discover.outputs.has_evals == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: eval-result-${{ github.run_id }}-${{ github.run_attempt }}-*
+          path: downloaded
+      - uses: actions/download-artifact@v4
+        with:
+          name: eval-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: plan
+      - name: Merge and validate records
+        run: |
+          set -euo pipefail
+          python -m pip install jsonschema==4.26.0
+          shopt -s nullglob
+          RECORDS=(downloaded/*/record.json)
+          if [ "${#RECORDS[@]}" -eq 0 ]; then
+            echo 'No eval records were uploaded'
+            exit 1
+          fi
+          python pipeline/merge_records.py "${RECORDS[@]}" \
+            --expected-matrix plan/gha-matrix.json
+          cp results.json "$RUNNER_TEMP/results.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/results.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Commit and push dashboard results
+        if: inputs.publish || github.event_name == 'schedule'
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          shopt -s nullglob
+          RECORDS=(downloaded/*/record.json)
+          for attempt in 1 2 3; do
+            git fetch origin "$BRANCH"
+            git checkout -B wdc-publish FETCH_HEAD
+            python pipeline/merge_records.py "${RECORDS[@]}" \
+              --expected-matrix plan/gha-matrix.json
+            git add results.json
+            if git diff --cached --quiet; then
+              echo 'No result changes to publish'
+              exit 0
+            fi
+            git commit -m "eval results ${GITHUB_RUN_ID}"
+            if git push origin "HEAD:$BRANCH"; then
+              exit 0
+            fi
+            echo "Push rejected; retrying on latest $BRANCH ($attempt/3)"
+          done
+          echo 'Could not publish after three non-force push attempts'
+          exit 1

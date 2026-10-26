@@ -1,0 +1,6 @@
+self-hosted-runner:
+  labels:
+    - ibm-wdc-os-h100-solo
+    - ibm-wdc-os-h100-duo
+    - ibm-wdc-os-h100-quad
+    - ibm-wdc-os-h100-octo
