@@ -308,6 +308,7 @@ def upsert_result(
         "algorithm": entry.get("algorithm"),
         "num_speculative_tokens": entry.get("num_speculative_tokens"),
         "hf_last_modified": entry.get("hf_last_modified"),
+        "hf_revision": entry.get("hf_revision"),
         "evaluated_at": now,
         "gpus": gpus_str,
         "status": status,

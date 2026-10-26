@@ -14,7 +14,11 @@ In GitHub, open **Actions → Evaluate speculators on WDC → Run workflow**.
 Enter the full drafter ID to force one model and leave `publish` disabled for a
 branch smoke test. The plan, per-model raw metrics/logs, and merged dashboard
 JSON are separate run artifacts. Set `publish` only when intentionally updating
-`results.json` on the selected branch.
+`results.json` on the selected branch. Use **Re-run all jobs** after a failure;
+partial reruns do not form a complete publishable batch. Actions checks out the
+selected Speculators ref, and the eval serves the exact drafter SHA discovered
+from Hugging Face. Optional private model downloads use the read-only
+`HF_READ_TOKEN` secret.
 
 ## Legacy OpenShift commands
 

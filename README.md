@@ -105,18 +105,27 @@ concurrent writes to `results.json`.
 
 The drafter's HF `config.json` is authoritative for `num_speculative_tokens`;
 missing or invalid values block automatic execution instead of selecting a
-default. Branch/manual runs default to artifacts only and do not update the
-website. To test one model from the GitHub Actions UI, choose **Evaluate
-speculators on WDC**, enter its full HF model ID, and leave **publish** off.
-Download `dashboard-results-<run-id>` to inspect the merged site data and each
-`eval-result-<run-id>-<slug>` artifact for diagnostics.
+default. Discovery pins the drafter commit SHA and vLLM serves that exact
+revision. GitHub Actions checks out `vllm-project/speculators` at the selected
+ref before the runner script starts. The result's deploy command and provenance
+record the exact serve/eval arguments and resolved software packages.
+
+Branch/manual runs default to artifacts only and do not update the website. To
+test one model from the GitHub Actions UI, choose **Evaluate speculators on WDC**,
+enter its full HF model ID, and leave **publish** off. Download
+`dashboard-results-<run-id>-<attempt>` to inspect the merged site data and each
+`eval-result-<run-id>-<attempt>-<slug>` artifact for diagnostics. Use **Re-run
+all jobs**, not a partial failed-job rerun, because publication requires one
+record for every model in the plan. If model downloads need authentication,
+configure the read-only `HF_READ_TOKEN` repository secret.
 
 Scheduled runs on `main` publish `results.json`, which triggers Pages. This
 requires the repository's `GITHUB_TOKEN` to have permission to push `main`.
-Infrastructure and cutover questions are tracked in
-[`docs/wdc-eval-open-questions.md`](docs/wdc-eval-open-questions.md).
-The legacy cluster timer/cron must be stopped before scheduled GHA publication
-is enabled; two schedulers must not write results concurrently.
+Publication re-merges records onto the latest branch with bounded non-force
+retries. A failed reevaluation keeps its last successful metrics in
+`last_success` while remaining eligible for retry. The legacy cluster timer/cron
+must be stopped before scheduled GHA publication is enabled; two schedulers must
+not write results concurrently.
 
 ## Legacy OpenShift automation
 

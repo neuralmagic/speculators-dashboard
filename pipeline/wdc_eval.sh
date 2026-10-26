@@ -7,24 +7,26 @@ OUT=${2:?usage: wdc_eval.sh ENTRY_JSON OUTPUT_DIR}
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$(mkdir -p "$OUT" && cd "$OUT" && pwd)"
 RAW="$OUT/raw"
-SPECULATORS_DIR="$OUT/speculators"
+SPECULATORS_DIR=${SPECULATORS_DIR:?SPECULATORS_DIR must point to the Actions checkout}
 VENV="$OUT/venv"
 mkdir -p "$RAW"
+test -f "$SPECULATORS_DIR/scripts/evaluate/evaluate.py"
 
 readarray -t CONFIG < <(python3 - "$ENTRY" <<'PY'
 import json
 import sys
 
 entry = json.load(open(sys.argv[1]))
-for key in ("model", "gpus", "algorithm"):
+for key in ("model", "gpus", "algorithm", "hf_revision"):
     print(entry[key])
 PY
 )
 MODEL=${CONFIG[0]}
 GPUS=${CONFIG[1]}
 ALGORITHM=${CONFIG[2]}
-SPECULATORS_REF=${SPECULATORS_REF:-main}
+HF_REVISION=${CONFIG[3]}
 VLLM_VERSION=${VLLM_VERSION:-nightly}
+SPECULATORS_REF=${SPECULATORS_REF:-main}
 
 export HF_HOME=${HF_HOME:-/model-cache}
 export UV_TORCH_BACKEND=${UV_TORCH_BACKEND:-cu130}
@@ -36,6 +38,7 @@ export LD_LIBRARY_PATH="/usr/local/nvidia/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_P
 
 nvidia-smi
 python3 - "$GPUS" <<'PY'
+import socket
 import subprocess
 import sys
 
@@ -43,12 +46,13 @@ expected = int(sys.argv[1])
 visible = len(subprocess.check_output(["nvidia-smi", "-L"], text=True).splitlines())
 if visible != expected:
     raise SystemExit(f"runner exposes {visible} GPUs; expected {expected}")
+with socket.socket() as sock:
+    try:
+        sock.bind(("127.0.0.1", 8000))
+    except OSError as exc:
+        raise SystemExit("port 8000 is already in use") from exc
 PY
 
-git clone --filter=blob:none --no-checkout \
-    https://github.com/vllm-project/speculators.git "$SPECULATORS_DIR"
-git -C "$SPECULATORS_DIR" fetch --depth 1 origin "$SPECULATORS_REF"
-git -C "$SPECULATORS_DIR" checkout --detach FETCH_HEAD
 uv venv --seed --python 3.12 "$VENV"
 uv pip install --python "$VENV/bin/python" -e "$SPECULATORS_DIR" guidellm
 if [ "$VLLM_VERSION" = nightly ]; then
@@ -58,30 +62,59 @@ else
     uv pip install --python "$VENV/bin/python" "vllm==$VLLM_VERSION"
 fi
 
-"$VENV/bin/python" - "$ENTRY" "$OUT/provenance.json" "$SPECULATORS_DIR" <<'PY'
+SERVE_ARGS=(serve "$MODEL" --revision "$HF_REVISION" --port 8000)
+if [ "$GPUS" -gt 1 ]; then
+    SERVE_ARGS+=(--tensor-parallel-size "$GPUS")
+fi
+if [ "$ALGORITHM" = mtp ]; then
+    SERVE_ARGS+=(--no-enable-chunked-prefill)
+fi
+EVAL_ARGS=(
+    "$SPECULATORS_DIR/scripts/evaluate/evaluate.py"
+    --target http://localhost:8000/v1
+    --output-dir "$RAW"
+    --max-requests 80
+    sweep
+)
+"$VENV/bin/python" - "$OUT/provenance.json" "$SPECULATORS_DIR" \
+    "$SPECULATORS_REF" "$UV_TORCH_BACKEND" "$VLLM_VERSION" \
+    "${SERVE_ARGS[@]}" -- "${EVAL_ARGS[@]}" <<'PY'
 import importlib.metadata
 import json
+import os
+import shlex
 import subprocess
 import sys
-import urllib.request
 
-entry = json.load(open(sys.argv[1]))
-with urllib.request.urlopen(
-    f"https://huggingface.co/api/models/{entry['model']}", timeout=30
-) as response:
-    checkpoint = json.load(response).get("sha")
+output, checkout, requested_ref, backend, requested_vllm = sys.argv[1:6]
+serve_args = sys.argv[6 : sys.argv.index("--", 6)]
+eval_args = sys.argv[sys.argv.index("--", 6) + 1 :]
+serve_argv = ["vllm", *serve_args]
+eval_argv = ["python", *eval_args]
 provenance = {
-    "checkpoint_sha": checkpoint,
-    "speculators_ref": sys.argv[3],
+    "checkpoint_sha": serve_args[serve_args.index("--revision") + 1],
+    "speculators_ref": requested_ref,
     "speculators_sha": subprocess.check_output(
-        ["git", "-C", sys.argv[3], "rev-parse", "HEAD"], text=True
+        ["git", "-C", checkout, "rev-parse", "HEAD"], text=True
     ).strip(),
     "speculators_version": importlib.metadata.version("speculators"),
+    "vllm_requested": requested_vllm,
     "vllm_version": importlib.metadata.version("vllm"),
+    "guidellm_version": importlib.metadata.version("guidellm"),
+    "cuda_backend": backend,
+    "serve_argv": serve_argv,
+    "serve_command": shlex.join(serve_argv),
+    "eval_argv": eval_argv,
+    "eval_command": shlex.join(eval_argv),
     "num_speculative_tokens_source": "drafter config.json: speculators_config.proposal_methods",
     "benchmark": {"mode": "sweep", "max_requests": 80},
+    "packages": subprocess.check_output(
+        [os.path.join(os.path.dirname(sys.executable), "python"), "-m", "pip", "freeze"],
+        text=True,
+    ).splitlines(),
 }
-json.dump(provenance, open(sys.argv[2], "w"), indent=2)
+with open(output, "w") as handle:
+    json.dump(provenance, handle, indent=2)
 PY
 
 VLLM_PID=""
@@ -107,54 +140,39 @@ record_failure() {
 trap 'record_failure $LINENO' ERR
 trap cleanup EXIT
 
-SERVE_ARGS=(--port 8000)
-if [ "$GPUS" -gt 1 ]; then
-    SERVE_ARGS+=(--tensor-parallel-size "$GPUS")
-fi
-if [ "$ALGORITHM" = mtp ]; then
-    SERVE_ARGS+=(--no-enable-chunked-prefill)
-fi
-setsid "$VENV/bin/vllm" serve "$MODEL" "${SERVE_ARGS[@]}" > "$OUT/vllm.log" 2>&1 &
+setsid "$VENV/bin/vllm" "${SERVE_ARGS[@]}" > "$OUT/vllm.log" 2>&1 &
 VLLM_PID=$!
 
 READY=0
 for _ in $(seq 1 480); do
+    if ! kill -0 "$VLLM_PID" 2>/dev/null; then
+        tail -50 "$OUT/vllm.log"
+        false
+    fi
     if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
         READY=1
         break
     fi
-    kill -0 "$VLLM_PID" 2>/dev/null || {
-        tail -50 "$OUT/vllm.log"
-        exit 1
-    }
     sleep 5
 done
 if [ "$READY" != 1 ]; then
     tail -50 "$OUT/vllm.log"
-    exit 1
+    false
 fi
 
-timeout --signal=TERM "${EVAL_TIMEOUT:-5400}" \
-    "$VENV/bin/python" "$SPECULATORS_DIR/scripts/evaluate/evaluate.py" \
-    --target http://localhost:8000/v1 --output-dir "$RAW" \
-    --max-requests 80 sweep > "$OUT/evaluate.log" 2>&1 || {
+timeout --signal=TERM --kill-after=30 "${EVAL_TIMEOUT:-5400}" \
+    "$VENV/bin/python" "${EVAL_ARGS[@]}" > "$OUT/evaluate.log" 2>&1 || {
         tail -50 "$OUT/evaluate.log"
-        exit 1
+        false
     }
 
-python3 "$REPO_ROOT/pipeline/deploy_agent.py" --model "$MODEL" \
-    --target "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("target") or "")' "$ENTRY")" \
-    --algorithm "$ALGORITHM" --gpus "$GPUS" > "$OUT/deploy.json"
-readarray -t DEPLOY < <(python3 - "$OUT/deploy.json" <<'PY'
+DEPLOY_COMMAND=$(python3 - "$OUT/provenance.json" <<'PY'
 import json
 import sys
 
-deploy = json.load(open(sys.argv[1]))
-for key in ("command", "recipe_source", "recipe_model"):
-    print(deploy.get(key) or "")
+print(json.load(open(sys.argv[1]))["serve_command"])
 PY
 )
 python3 "$REPO_ROOT/pipeline/normalize.py" eval --entry "$ENTRY" --status ok \
-    --raw-dir "$RAW" --deploy-command "${DEPLOY[0]}" \
-    --deploy-recipe-source "${DEPLOY[1]}" --deploy-recipe-model "${DEPLOY[2]}" \
+    --raw-dir "$RAW" --deploy-command "$DEPLOY_COMMAND" \
     --provenance "$OUT/provenance.json" --output "$OUT/record.json"

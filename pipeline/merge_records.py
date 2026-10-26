@@ -34,6 +34,12 @@ def main() -> None:
         if model in seen:
             raise ValueError(f"duplicate eval record for {model}")
         seen.add(model)
+        previous = models.get(model)
+        if record["status"] == "failed" and previous:
+            if previous["status"] == "ok":
+                record["last_success"] = previous
+            elif previous.get("last_success"):
+                record["last_success"] = previous["last_success"]
         models[model] = record
 
     if args.expected_matrix:
